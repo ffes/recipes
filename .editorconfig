@@ -1,0 +1,25 @@
+root = true
+
+[*]
+end_of_line = crlf
+charset = utf-8
+indent_style = tab
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+dotnet_sort_system_directives_first = true
+dotnet_style_require_accessibility_modifiers = always:warning
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_space_after_keywords_in_control_flow_statements = true
+
+[*.{csproj,json}]
+indent_style = space
+indent_size = 2
+
+[*.sh]
+end_of_line = lf
+
+[*.md]
+trim_trailing_whitespace = false
