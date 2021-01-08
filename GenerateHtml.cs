@@ -12,7 +12,7 @@ namespace Recipes
 		/// Add the basic elements to the head.
 		/// </summary>
 		/// <param name="head"></param>
-		private static void AddBasicsToHead(HtmlNode head)
+		private static void AddBasicsToHead(HtmlNode head, string title)
 		{
 			// <meta charset="utf-8">
 			var meta = head.AppendChild(HtmlNode.CreateNode("<meta>"));
@@ -27,12 +27,9 @@ namespace Recipes
 			var link = head.AppendChild(HtmlNode.CreateNode("<link>"));
 			link.Attributes.Add("href", "styles.css");
 			link.Attributes.Add("rel", "stylesheet");
-		}
 
-		private static void AddRecipeToHead(HtmlNode head, Recipe recipe)
-		{
-			// Add the title of the recipe
-			head.AppendChild(HtmlNode.CreateNode($"<title>{recipe.Name}</title>"));
+			// Add the title of the page
+			head.AppendChild(HtmlNode.CreateNode($"<title>{title}</title>"));
 		}
 
 		private static void AddRecipeToBody(HtmlNode body, Recipe recipe)
@@ -70,9 +67,9 @@ namespace Recipes
 			}
 		}
 
-		public static void Generate(Recipe recipe, string path)
+		private static void WriteRecipe(Recipe recipe, string path)
 		{
-			// It al starts with a document
+			// It all starts with a document
 			var doc = new HtmlDocument();
 
 			// Add the html5 doctype
@@ -85,20 +82,19 @@ namespace Recipes
 
 			// Add the head and fill it
 			var head = html.AppendChild(HtmlNode.CreateNode("<head></head>"));
-			AddBasicsToHead(head);
-			AddRecipeToHead(head, recipe);
+			AddBasicsToHead(head, recipe.Name);
 
 			// Add the body and fill it
 			var body = html.AppendChild(HtmlNode.CreateNode("<body></body>"));
 			AddRecipeToBody(body, recipe);
 
 			// Save the document
-			doc.Save(Path.Combine(path, recipe.Filename));
+			doc.Save(Path.Combine(path, recipe.FilenameHtml));
 		}
 
-		public static void GenerateIndex(List<Recipe> recipes, string path)
+		private static void WriteIndex(List<Recipe> recipes, string path)
 		{
-			// It al starts with a document
+			// It all starts with a document
 			var doc = new HtmlDocument();
 
 			// Add the html5 doctype
@@ -111,8 +107,7 @@ namespace Recipes
 
 			// Add the head and fill it
 			var head = html.AppendChild(HtmlNode.CreateNode("<head></head>"));
-			AddBasicsToHead(head);
-			head.AppendChild(HtmlNode.CreateNode($"<title>Recepten</title>"));
+			AddBasicsToHead(head, "Recepten");
 
 			// Add the body
 			var body = html.AppendChild(HtmlNode.CreateNode("<body></body>"));
@@ -123,11 +118,35 @@ namespace Recipes
 			{
 				var li = list.AppendChild(HtmlNode.CreateNode("<li></li>"));
 				var a = li.AppendChild(HtmlNode.CreateNode($"<a>{recipe.Name}</a>"));
-				a.Attributes.Add("href", recipe.Filename);
+				a.Attributes.Add("href", recipe.FilenameHtml);
 			}
 
 			// Save the document
 			doc.Save(path);
+		}
+
+		public static void Generate(List<Recipe> recipes, string path)
+		{
+			// Generate the Basic HTML website
+			foreach (var recipe in recipes)
+			{
+				// Generate the HTML output
+				WriteRecipe(recipe, path);
+
+				// Copy the image file to the output directory
+				if (!string.IsNullOrWhiteSpace(recipe.Image))
+				{
+					var from = Path.Combine(recipe.SourceFile.DirectoryName, recipe.Image);
+					if (File.Exists(from))
+					{
+						var to = Path.Combine(path, recipe.Image);
+						File.Copy(from, to, true);
+					}
+				}
+			}
+
+			// Generate the index.html
+			WriteIndex(recipes, Path.Combine(path, "index.html"));
 		}
 	}
 }

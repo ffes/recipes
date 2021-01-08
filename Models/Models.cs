@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.Json.Serialization;
 
 namespace Recipes.Models
@@ -41,7 +42,8 @@ namespace Recipes.Models
 		[JsonPropertyName("@type")]
 		public string Type { get; set; }
 		public string Name { get; set; }
-		public string Filename { get; set; }
+		public FileInfo SourceFile { get; set; }
+		public string FilenameHtml { get; set; }
 		public string Description { get; set; }
 		public string InLanguage { get; set; }
 		public string Image { get; set; }
