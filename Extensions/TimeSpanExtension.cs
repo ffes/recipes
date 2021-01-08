@@ -1,6 +1,6 @@
 using System;
 
-namespace Recepten
+namespace Recipes
 {
 	public static class TimeSpanExtension
 	{

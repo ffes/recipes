@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Recepten.Models
+namespace Recipes.Models
 {
 	public class TypeOfGood
 	{

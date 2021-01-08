@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
-using Recepten.Models;
+using Recipes.Models;
 
-namespace Recepten
+namespace Recipes
 {
 	internal class Program
 	{

@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using HtmlAgilityPack;
-using Recepten.Models;
+using Recipes.Models;
 
-namespace Recepten
+namespace Recipes
 {
 	public class GenerateHtml
 	{
@@ -14,11 +14,11 @@ namespace Recepten
 		/// <param name="head"></param>
 		private static void AddBasicsToHead(HtmlNode head)
 		{
-			// <meta "charset"="utf-8">
+			// <meta charset="utf-8">
 			var meta = head.AppendChild(HtmlNode.CreateNode("<meta>"));
 			meta.Attributes.Add("charset", "utf-8");
 
-			// <meta "name"="viewport" "content"="width=device-width, initial-scale=1">
+			// <meta name="viewport" content="width=device-width, initial-scale=1">
 			meta = head.AppendChild(HtmlNode.CreateNode("<meta>"));
 			meta.Attributes.Add("name", "viewport");
 			meta.Attributes.Add("content", "width=device-width, initial-scale=1");

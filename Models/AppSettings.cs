@@ -1,4 +1,4 @@
-namespace Recepten.Models
+namespace Recipes.Models
 {
 	public class Paths
 	{
