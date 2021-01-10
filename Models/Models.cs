@@ -41,6 +41,7 @@ namespace Recipes.Models
 		public string Context { get; set; }
 		[JsonPropertyName("@type")]
 		public string Type { get; set; }
+		public string Id { get; set; }
 		public string Name { get; set; }
 		public FileInfo SourceFile { get; set; }
 		public string FilenameHtml { get; set; }

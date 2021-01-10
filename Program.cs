@@ -50,9 +50,11 @@ namespace Recipes
 				int len = recipe.SourceFile.Extension.Length;
 				recipe.FilenameHtml = recipe.SourceFile.Name[0..^len] + ".html";
 
+				recipe.Id = $"recipe{recipes.Count}";
 			}
 
 			GenerateHtml.Generate(recipes, appsettings.Paths.Output);
+			GenerateEpub.Generate(recipes);
 		}
 	}
 }
