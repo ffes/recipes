@@ -48,6 +48,9 @@ namespace Recipes
 				body.AppendChild(HtmlNode.CreateNode($"<p>Totale bereidingstijd: {ts.ToReadableString()}</p>"));
 			}
 
+			// Add the yields
+			body.AppendChild(HtmlNode.CreateNode($"<p>Voor: {recipe.RecipeYield.Value} {recipe.RecipeYield.UnitText}</p>"));
+
 			// Add the ingredients
 			body.AppendChild(HtmlNode.CreateNode($"<h2>Ingrediënten</h2>"));
 
