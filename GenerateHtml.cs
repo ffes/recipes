@@ -38,8 +38,16 @@ namespace Recipes
 			body.AppendChild(HtmlNode.CreateNode($"<h1>{recipe.Name}</h1>"));
 
 			// Add the description
-			if (!string.IsNullOrEmpty(recipe.Description))
+			if (!string.IsNullOrWhiteSpace(recipe.Description))
 				body.AppendChild(HtmlNode.CreateNode($"<p>{recipe.Description}</p>"));
+
+			if (!string.IsNullOrWhiteSpace(recipe.Image))
+			{
+				var img = body.AppendChild(HtmlNode.CreateNode("<img>"));
+				img.Attributes.Add("src", recipe.Image);
+				img.Attributes.Add("title", recipe.Name);
+				img.Attributes.Add("alt", recipe.Name);
+			}
 
 			// Add the total time
 			if (recipe.TotalTime != null)
