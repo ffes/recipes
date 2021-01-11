@@ -53,6 +53,10 @@ namespace Recipes
 				recipe.Id = $"recipe{recipes.Count}";
 			}
 
+			// Sort the recipes using Recipe.CompareTo()
+			recipes.Sort();
+
+			// Generate all the outputs
 			GenerateHtml.Generate(recipes, appsettings.Paths.Output);
 			GenerateEpub.Generate(recipes);
 		}

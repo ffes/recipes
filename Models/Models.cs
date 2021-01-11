@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.Json.Serialization;
 
@@ -35,7 +36,7 @@ namespace Recipes.Models
 		public string UnitText { get; set; }
 	}
 
-	public class Recipe
+	public class Recipe: IComparable<Recipe>
 	{
 		[JsonPropertyName("@context")]
 		public string Context { get; set; }
@@ -62,5 +63,10 @@ namespace Recipes.Models
 		public List<string> RecipeIngredient { get; set; }
 		//public List<RecipeIngredient> RecipeIngredient { get; set; }
 		public List<string> RecipeInstructions { get; set; }
+
+		public int CompareTo([AllowNull] Recipe other)
+		{
+			return Name.CompareTo(other.Name);
+		}
 	}
 }
