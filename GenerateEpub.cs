@@ -50,7 +50,7 @@ namespace Recipes
 
 			// Add the yields
 			var yields = doc.CreateElement("p");
-			yields.InnerText = $"voor: {recipe.RecipeYield.Value} {recipe.RecipeYield.UnitText}";
+			yields.InnerText = $"Voor: {recipe.RecipeYield.Value} {recipe.RecipeYield.UnitText}";
 			body.AppendChild(yields);
 
 			// Add the ingredients
