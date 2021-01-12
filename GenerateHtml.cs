@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
@@ -131,6 +132,9 @@ namespace Recipes
 				var a = li.AppendChild(HtmlNode.CreateNode($"<a>{recipe.Name}</a>"));
 				a.Attributes.Add("href", recipe.FilenameHtml);
 			}
+
+			// Add the publication date
+			body.AppendChild(HtmlNode.CreateNode($"<p>{DateTime.Now:d MMMM yyyy}</p>"));
 
 			// Save the document
 			doc.Save(path);
