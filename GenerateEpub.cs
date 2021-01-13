@@ -44,13 +44,13 @@ namespace Recipes
 			{
 				var ts = XmlConvert.ToTimeSpan(recipe.TotalTime);
 				var time = doc.CreateElement("p");
-				time.InnerText = $"Totale bereidingstijd: {ts.ToReadableString()}";
+				time.InnerText = $"Totale bereidingstijd {ts.ToReadableString()}";
 				body.AppendChild(time);
 			}
 
 			// Add the yields
 			var yields = doc.CreateElement("p");
-			yields.InnerText = $"Voor: {recipe.RecipeYield.Value} {recipe.RecipeYield.UnitText}";
+			yields.InnerText = $"Voor {recipe.RecipeYield.Value} {recipe.RecipeYield.UnitText}";
 			body.AppendChild(yields);
 
 			// Add the ingredients

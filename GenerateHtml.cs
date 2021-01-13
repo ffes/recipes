@@ -54,11 +54,11 @@ namespace Recipes
 			if (recipe.TotalTime != null)
 			{
 				var ts = XmlConvert.ToTimeSpan(recipe.TotalTime);
-				body.AppendChild(HtmlNode.CreateNode($"<p>Totale bereidingstijd: {ts.ToReadableString()}</p>"));
+				body.AppendChild(HtmlNode.CreateNode($"<p>Totale bereidingstijd {ts.ToReadableString()}</p>"));
 			}
 
 			// Add the yields
-			body.AppendChild(HtmlNode.CreateNode($"<p>Voor: {recipe.RecipeYield.Value} {recipe.RecipeYield.UnitText}</p>"));
+			body.AppendChild(HtmlNode.CreateNode($"<p>Voor {recipe.RecipeYield.Value} {recipe.RecipeYield.UnitText}</p>"));
 
 			// Add the ingredients
 			body.AppendChild(HtmlNode.CreateNode($"<h2>Ingrediënten</h2>"));
