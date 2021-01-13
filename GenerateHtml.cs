@@ -50,6 +50,34 @@ namespace Recipes
 				img.Attributes.Add("alt", recipe.Name);
 			}
 
+			// Add the publisher
+			var by = body.AppendChild(HtmlNode.CreateNode("<p></p>"));
+			if (!string.IsNullOrWhiteSpace(recipe.Publisher))
+			{
+				by.InnerHtml = "Door ";
+
+				// Add a link to original URL
+				if (!string.IsNullOrWhiteSpace(recipe.Url))
+				{
+					var pub = HtmlNode.CreateNode($"<a>{recipe.Publisher}</a>");
+					pub.Attributes.Add("href", recipe.Url);
+					by.InnerHtml += pub.OuterHtml;
+				}
+				else
+					by.InnerHtml += recipe.Publisher;
+			}
+
+			// Add the publication date
+			if (recipe.DatePublished != null && recipe.DatePublished.Year > 1900)
+			{
+				if (string.IsNullOrWhiteSpace(by.InnerHtml))
+					by.InnerHtml = "In ";
+				else
+					by.InnerHtml += " in ";
+
+				by.InnerHtml += recipe.DatePublished.ToString("MMMM yyyy");
+			}
+
 			// Add the total time
 			if (recipe.TotalTime != null)
 			{
