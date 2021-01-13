@@ -115,6 +115,57 @@ namespace Recipes
 			doc.Save(Path.Combine(dir, recipe.FilenameHtml));
 		}
 
+		private static void WriteCoverPage(string dir)
+		{
+			// It all starts with a document
+			var doc = new XmlDocument();
+
+			// Add the html root element
+			var appsettings = Program.config.Get<AppSettings>();
+			var html = doc.CreateElement("html");
+			html.SetAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+			html.SetAttribute("xml:lang", appsettings.EPUB.Language);
+			html.SetAttribute("lang", appsettings.EPUB.Language);
+			doc.AppendChild(html);
+
+			// Create an XML declaration
+			var xmldecl = doc.CreateXmlDeclaration("1.0", null, null);
+			doc.InsertBefore(xmldecl, html);
+
+			// Create the head and add it to the html
+			var head = doc.CreateElement("head");
+
+			html.AppendChild(head);
+			AddBasicsToHead(doc, head, "Cover page");
+
+			// Add the body and fill it
+			var body = doc.CreateElement("body");
+			html.AppendChild(body);
+
+			// Add the name of the ebook
+			var title = doc.CreateElement("h1");
+			title.InnerXml = appsettings.EPUB.Name;
+			body.AppendChild(title);
+
+			// Add the author
+			var author = doc.CreateElement("h2");
+			author.InnerXml = appsettings.EPUB.Author;
+			body.AppendChild(author);
+
+			// Add an empty line
+			var separator = doc.CreateElement("p");
+			separator.InnerXml = "\u00A0";
+			body.AppendChild(separator);
+
+			// Add the publication date
+			var pubdate = doc.CreateElement("p");
+			pubdate.InnerXml = DateTime.Now.ToString("d MMMM yyyy");
+			body.AppendChild(pubdate);
+
+			// Save the document
+			doc.Save(Path.Combine(dir, "coverpage.html"));
+		}
+
 		private static void WriteContainerXML(string dir)
 		{
 			// It all starts with a document
@@ -212,9 +263,10 @@ namespace Recipes
 			// It all starts with a document
 			var doc = new XmlDocument();
 
-			// Define the namespace URLs
+			// Define the namespace URLs, and other strings
 			const string opf_namespace = "http://www.idpf.org/2007/opf";
 			const string dc_namespace = "http://purl.org/dc/elements/1.1/";
+			const string coverpage = "coverpage";
 
 			// Add the html root element
 			var package = doc.CreateElement("package", opf_namespace);
@@ -270,6 +322,13 @@ namespace Recipes
 			toc.SetAttribute("media-type", "application/x-dtbncx+xml");
 			manifest.AppendChild(toc);
 
+			// Add the cover page to the manifest
+			var coverpg = doc.CreateElement("item", opf_namespace);
+			coverpg.SetAttribute("id", coverpage);
+			coverpg.SetAttribute("href", "OEBPS/coverpage.html");
+			coverpg.SetAttribute("media-type", "application/xhtml+xml");
+			manifest.AppendChild(coverpg);
+
 			// Now add all the recipes to the manifest
 			foreach (var recipe in recipes)
 			{
@@ -285,6 +344,12 @@ namespace Recipes
 			spine.SetAttribute("toc", "ncx");
 			package.AppendChild(spine);
 
+			// Add the cover page to the spine
+			var cover = doc.CreateElement("itemref", opf_namespace);
+			cover.SetAttribute("idref", coverpage);
+			spine.AppendChild(cover);
+
+			// Add all the recipes to the spine
 			foreach (var recipe in recipes)
 			{
 				var item = doc.CreateElement("itemref", opf_namespace);
@@ -337,6 +402,7 @@ namespace Recipes
 			var contentDir = Path.Combine(baseDir, "OEBPS");
 			Directory.CreateDirectory(contentDir);
 
+			WriteCoverPage(contentDir);
 			foreach (var recipe in recipes)
 				WriteRecipe(recipe, contentDir);
 
