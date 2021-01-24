@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Xml;
 using HtmlAgilityPack;
@@ -57,7 +58,7 @@ namespace Recipes
 			var by = body.AppendChild(HtmlNode.CreateNode("<p></p>"));
 			if (!string.IsNullOrWhiteSpace(recipe.Publisher))
 			{
-				by.InnerHtml = "Door ";
+				by.InnerHtml = "Gepubliceerd door ";
 
 				// Add a link to original URL
 				if (!string.IsNullOrWhiteSpace(recipe.Url))
@@ -74,11 +75,9 @@ namespace Recipes
 			if (recipe.DatePublished != null && recipe.DatePublished.Year > 1900)
 			{
 				if (string.IsNullOrWhiteSpace(by.InnerHtml))
-					by.InnerHtml = "In ";
-				else
-					by.InnerHtml += " in ";
+					by.InnerHtml = "Gepubliceerd ";
 
-				by.InnerHtml += recipe.DatePublished.ToString("MMMM yyyy");
+				by.InnerHtml += " in " + recipe.DatePublished.ToString("MMMM yyyy", CultureInfo.GetCultureInfo(recipe.InLanguage));
 			}
 
 			// Add the total time
