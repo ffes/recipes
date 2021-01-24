@@ -11,6 +11,13 @@ namespace Recipes
 {
 	public class GenerateHtml
 	{
+		private readonly List<Recipe> Recipes;
+
+		public GenerateHtml(List<Recipe> recipes)
+		{
+			Recipes = recipes;
+		}
+
 		/// <summary>
 		/// Add the basic elements to the head.
 		/// </summary>
@@ -109,7 +116,7 @@ namespace Recipes
 			}
 		}
 
-		private void WriteRecipe(Recipe recipe, string path)
+		private void WriteRecipe(Recipe recipe, string dir)
 		{
 			// It all starts with a document
 			var doc = new HtmlDocument();
@@ -131,10 +138,10 @@ namespace Recipes
 			AddRecipeToBody(body, recipe);
 
 			// Save the document
-			doc.Save(Path.Combine(path, recipe.FilenameHtml));
+			doc.Save(Path.Combine(dir, recipe.FilenameHtml));
 		}
 
-		private void WriteIndex(List<Recipe> recipes, string path)
+		private void WriteIndex(string filename)
 		{
 			// It all starts with a document
 			var doc = new HtmlDocument();
@@ -154,9 +161,15 @@ namespace Recipes
 			// Add the body
 			var body = html.AppendChild(HtmlNode.CreateNode("<body></body>"));
 
+			// Add the title at the top
+			var appsettings = Program.config.Get<AppSettings>();
+			body.AppendChild(HtmlNode.CreateNode($"<h1>{appsettings.EPUB.Name}</h1>"));
+
+			body.AppendChild(HtmlNode.CreateNode("<h2>Recepten</h2>"));
+
 			// And fill it a simple list of all the recipes
 			var list = body.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
-			foreach (var recipe in recipes)
+			foreach (var recipe in Recipes)
 			{
 				var li = list.AppendChild(HtmlNode.CreateNode("<li></li>"));
 				var a = li.AppendChild(HtmlNode.CreateNode($"<a>{recipe.Name}</a>"));
@@ -167,15 +180,15 @@ namespace Recipes
 			body.AppendChild(HtmlNode.CreateNode($"<p>{DateTime.Now:d MMMM yyyy}</p>"));
 
 			// Save the document
-			doc.Save(path);
+			doc.Save(filename);
 		}
 
-		public void Generate(List<Recipe> recipes)
+		public void Generate()
 		{
 			var appsettings = Program.config.Get<AppSettings>();
 
 			// Generate the Basic HTML website
-			foreach (var recipe in recipes)
+			foreach (var recipe in Recipes)
 			{
 				// Generate the HTML output
 				WriteRecipe(recipe, appsettings.Website.Output);
@@ -193,7 +206,7 @@ namespace Recipes
 			}
 
 			// Generate the index.html
-			WriteIndex(recipes, Path.Combine(appsettings.Website.Output, "index.html"));
+			WriteIndex(Path.Combine(appsettings.Website.Output, "index.html"));
 
 			// Copy the stylesheet
 			File.Copy(Path.Combine(appsettings.InputPath, appsettings.Website.Stylesheet), Path.Combine(appsettings.Website.Output, appsettings.Website.Stylesheet), true);
