@@ -25,7 +25,7 @@ namespace Recipes
 				.Build();
 		}
 
-		private static void Main(string[] args)
+		private static List<Recipe> GetRecipes()
 		{
 			var appsettings = config.Get<AppSettings>();
 
@@ -55,6 +55,14 @@ namespace Recipes
 
 			// Sort the recipes using Recipe.CompareTo()
 			recipes.Sort();
+
+			return recipes;
+		}
+
+		private static void Main(string[] args)
+		{
+			// First get all the recipes
+			var recipes = GetRecipes();
 
 			// Generate all the outputs
 			GenerateHtml.Generate(recipes);
