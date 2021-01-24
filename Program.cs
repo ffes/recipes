@@ -79,8 +79,11 @@ namespace Recipes
 			var recipes = GetRecipes();
 
 			// Generate all the outputs
-			GenerateHtml.Generate(recipes);
-			GenerateEpub.Generate(recipes);
+			var html = new GenerateHtml();
+			html.Generate(recipes);
+
+			var epub = new GenerateEpub();
+			epub.Generate(recipes);
 		}
 	}
 }

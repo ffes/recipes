@@ -12,7 +12,7 @@ namespace Recipes
 {
 	public class GenerateEpub
 	{
-		private static void AddBasicsToHead(XmlDocument doc, XmlElement head, string title)
+		private void AddBasicsToHead(XmlDocument doc, XmlElement head, string title)
 		{
 			var meta = doc.CreateElement("meta");
 			meta.SetAttribute("content", "http://www.w3.org/1999/xhtml; charset=utf-8");
@@ -24,7 +24,7 @@ namespace Recipes
 			head.AppendChild(ttl);
 		}
 
-		private static void AddRecipeToBody(XmlDocument doc, XmlElement body, Recipe recipe)
+		private void AddRecipeToBody(XmlDocument doc, XmlElement body, Recipe recipe)
 		{
 			// Add the name of the recipe
 			var title = doc.CreateElement("h1");
@@ -83,7 +83,7 @@ namespace Recipes
 			}
 		}
 
-		private static void WriteRecipe(Recipe recipe, string dir)
+		private void WriteRecipe(Recipe recipe, string dir)
 		{
 			// It all starts with a document
 			var doc = new XmlDocument();
@@ -115,7 +115,7 @@ namespace Recipes
 			doc.Save(Path.Combine(dir, recipe.FilenameHtml));
 		}
 
-		private static void WriteCoverPage(string dir)
+		private void WriteCoverPage(string dir)
 		{
 			// It all starts with a document
 			var doc = new XmlDocument();
@@ -166,7 +166,7 @@ namespace Recipes
 			doc.Save(Path.Combine(dir, "coverpage.html"));
 		}
 
-		private static void WriteContainerXML(string dir)
+		private void WriteContainerXML(string dir)
 		{
 			// It all starts with a document
 			var doc = new XmlDocument();
@@ -192,7 +192,7 @@ namespace Recipes
 			doc.Save(Path.Combine(dir, "container.xml"));
 		}
 
-		private static void WriteTOC(List<Recipe> recipes, string dir)
+		private void WriteTOC(List<Recipe> recipes, string dir)
 		{
 			// It all starts with a document
 			var doc = new XmlDocument();
@@ -258,7 +258,7 @@ namespace Recipes
 			doc.Save(Path.Combine(dir, "toc.ncx"));
 		}
 
-		private static void WriteContentOpf(List<Recipe> recipes, string dir)
+		private void WriteContentOpf(List<Recipe> recipes, string dir)
 		{
 			// It all starts with a document
 			var doc = new XmlDocument();
@@ -360,7 +360,7 @@ namespace Recipes
 			doc.Save(Path.Combine(dir, "content.opf"));
 		}
 
-		private static void CreateEpub(string dir, string filename)
+		private void CreateEpub(string dir, string filename)
 		{
 			// First delete an existing file (just in case)
 			File.Delete(filename);
@@ -382,7 +382,7 @@ namespace Recipes
 			zip.Save();
 		}
 
-		public static void Generate(List<Recipe> recipes)
+		public void Generate(List<Recipe> recipes)
 		{
 			var appsettings = Program.config.Get<AppSettings>();
 

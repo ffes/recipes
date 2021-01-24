@@ -15,7 +15,7 @@ namespace Recipes
 		/// Add the basic elements to the head.
 		/// </summary>
 		/// <param name="head"></param>
-		private static void AddBasicsToHead(HtmlNode head, string title)
+		private void AddBasicsToHead(HtmlNode head, string title)
 		{
 			var appsettings = Program.config.Get<AppSettings>();
 
@@ -37,7 +37,7 @@ namespace Recipes
 			head.AppendChild(HtmlNode.CreateNode($"<title>{title}</title>"));
 		}
 
-		private static void AddRecipeToBody(HtmlNode body, Recipe recipe)
+		private void AddRecipeToBody(HtmlNode body, Recipe recipe)
 		{
 			// Add the title at the start of the page
 			body.AppendChild(HtmlNode.CreateNode($"<h1>{recipe.Name}</h1>"));
@@ -109,7 +109,7 @@ namespace Recipes
 			}
 		}
 
-		private static void WriteRecipe(Recipe recipe, string path)
+		private void WriteRecipe(Recipe recipe, string path)
 		{
 			// It all starts with a document
 			var doc = new HtmlDocument();
@@ -134,7 +134,7 @@ namespace Recipes
 			doc.Save(Path.Combine(path, recipe.FilenameHtml));
 		}
 
-		private static void WriteIndex(List<Recipe> recipes, string path)
+		private void WriteIndex(List<Recipe> recipes, string path)
 		{
 			// It all starts with a document
 			var doc = new HtmlDocument();
@@ -170,7 +170,7 @@ namespace Recipes
 			doc.Save(path);
 		}
 
-		public static void Generate(List<Recipe> recipes)
+		public void Generate(List<Recipe> recipes)
 		{
 			var appsettings = Program.config.Get<AppSettings>();
 
