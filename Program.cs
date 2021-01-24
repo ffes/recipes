@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -42,15 +43,28 @@ namespace Recipes
 			{
 				// Read the JSON and deserialize it
 				var document = File.ReadAllText(filepath);
-				var recipe = JsonSerializer.Deserialize<Recipe>(document, options);
-				recipes.Add(recipe);
 
-				// Get the filename from the path and create the html filename
-				recipe.SourceFile = new FileInfo(filepath);
-				int len = recipe.SourceFile.Extension.Length;
-				recipe.FilenameHtml = recipe.SourceFile.Name[0..^len] + ".html";
+				Recipe recipe = null;
+				try
+				{
+					recipe = JsonSerializer.Deserialize<Recipe>(document, options);
+				}
+				catch (JsonException ex)
+				{
+					Console.WriteLine($"Error parsing {filepath}: {ex}");
+				}
 
-				recipe.Id = $"recipe{recipes.Count}";
+				if (recipe != null)
+				{
+					recipes.Add(recipe);
+
+					// Get the filename from the path and create the html filename
+					recipe.SourceFile = new FileInfo(filepath);
+					int len = recipe.SourceFile.Extension.Length;
+					recipe.FilenameHtml = recipe.SourceFile.Name[0..^len] + ".html";
+
+					recipe.Id = $"recipe{recipes.Count}";
+				}
 			}
 
 			// Sort the recipes using Recipe.CompareTo()
