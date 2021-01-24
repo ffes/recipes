@@ -85,8 +85,8 @@ namespace Recipes
 			var html = new GenerateHtml(recipes);
 			html.Generate();
 
-			var epub = new GenerateEpub();
-			epub.Generate(recipes);
+			var epub = new GenerateEpub(recipes);
+			epub.Generate();
 		}
 	}
 }

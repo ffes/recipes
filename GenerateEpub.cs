@@ -12,6 +12,13 @@ namespace Recipes
 {
 	public class GenerateEpub
 	{
+		private readonly List<Recipe> Recipes;
+
+		public GenerateEpub(List<Recipe> recipes)
+		{
+			Recipes = recipes;
+		}
+
 		private void AddBasicsToHead(XmlDocument doc, XmlElement head, string title)
 		{
 			var meta = doc.CreateElement("meta");
@@ -192,7 +199,7 @@ namespace Recipes
 			doc.Save(Path.Combine(dir, "container.xml"));
 		}
 
-		private void WriteTOC(List<Recipe> recipes, string dir)
+		private void WriteTOC(string dir)
 		{
 			// It all starts with a document
 			var doc = new XmlDocument();
@@ -236,7 +243,7 @@ namespace Recipes
 			ncx.AppendChild(navMap);
 
 			int i = 0;
-			foreach (var recipe in recipes)
+			foreach (var recipe in Recipes)
 			{
 				i++;
 				var navPoint = doc.CreateElement("navPoint");
@@ -258,7 +265,7 @@ namespace Recipes
 			doc.Save(Path.Combine(dir, "toc.ncx"));
 		}
 
-		private void WriteContentOpf(List<Recipe> recipes, string dir)
+		private void WriteContentOpf(string dir)
 		{
 			// It all starts with a document
 			var doc = new XmlDocument();
@@ -330,7 +337,7 @@ namespace Recipes
 			manifest.AppendChild(coverpg);
 
 			// Now add all the recipes to the manifest
-			foreach (var recipe in recipes)
+			foreach (var recipe in Recipes)
 			{
 				var item = doc.CreateElement("item", opf_namespace);
 				item.SetAttribute("id", recipe.Id);
@@ -350,7 +357,7 @@ namespace Recipes
 			spine.AppendChild(cover);
 
 			// Add all the recipes to the spine
-			foreach (var recipe in recipes)
+			foreach (var recipe in Recipes)
 			{
 				var item = doc.CreateElement("itemref", opf_namespace);
 				item.SetAttribute("idref", recipe.Id);
@@ -382,7 +389,7 @@ namespace Recipes
 			zip.Save();
 		}
 
-		public void Generate(List<Recipe> recipes)
+		public void Generate()
 		{
 			var appsettings = Program.config.Get<AppSettings>();
 
@@ -395,15 +402,15 @@ namespace Recipes
 			WriteContainerXML(metaDir);
 
 			// Write the content file and the table of content
-			WriteContentOpf(recipes, baseDir);
-			WriteTOC(recipes, baseDir);
+			WriteContentOpf(baseDir);
+			WriteTOC(baseDir);
 
 			// Write all the recipes in the OEBPS directory
 			var contentDir = Path.Combine(baseDir, "OEBPS");
 			Directory.CreateDirectory(contentDir);
 
 			WriteCoverPage(contentDir);
-			foreach (var recipe in recipes)
+			foreach (var recipe in Recipes)
 				WriteRecipe(recipe, contentDir);
 
 			// Create the EPUB
