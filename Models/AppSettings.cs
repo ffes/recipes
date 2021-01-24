@@ -2,10 +2,10 @@ using System;
 
 namespace Recipes.Models
 {
-	public class Paths
+	public class Website
 	{
-		public string Input { get; set; }
 		public string Output { get; set; }
+		public string Stylesheet { get; set; }
 	}
 
 	public class EPUB
@@ -19,7 +19,8 @@ namespace Recipes.Models
 
 	public class AppSettings
 	{
-		public Paths Paths { get; set; }
+		public string InputPath { get; set; }
+		public Website Website { get; set; }
 		public EPUB EPUB { get; set; }
 	}
 }

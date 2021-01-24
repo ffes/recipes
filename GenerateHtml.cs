@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using HtmlAgilityPack;
+using Microsoft.Extensions.Configuration;
 using Recipes.Models;
 
 namespace Recipes
@@ -15,6 +16,8 @@ namespace Recipes
 		/// <param name="head"></param>
 		private static void AddBasicsToHead(HtmlNode head, string title)
 		{
+			var appsettings = Program.config.Get<AppSettings>();
+
 			// <meta charset="utf-8">
 			var meta = head.AppendChild(HtmlNode.CreateNode("<meta>"));
 			meta.Attributes.Add("charset", "utf-8");
@@ -26,7 +29,7 @@ namespace Recipes
 
 			// <link href="styles.css" rel="stylesheet">
 			var link = head.AppendChild(HtmlNode.CreateNode("<link>"));
-			link.Attributes.Add("href", "styles.css");
+			link.Attributes.Add("href", appsettings.Website.Stylesheet);
 			link.Attributes.Add("rel", "stylesheet");
 
 			// Add the title of the page
@@ -168,13 +171,15 @@ namespace Recipes
 			doc.Save(path);
 		}
 
-		public static void Generate(List<Recipe> recipes, string path)
+		public static void Generate(List<Recipe> recipes)
 		{
+			var appsettings = Program.config.Get<AppSettings>();
+
 			// Generate the Basic HTML website
 			foreach (var recipe in recipes)
 			{
 				// Generate the HTML output
-				WriteRecipe(recipe, path);
+				WriteRecipe(recipe, appsettings.Website.Output);
 
 				// Copy the image file to the output directory
 				if (!string.IsNullOrWhiteSpace(recipe.Image))
@@ -182,14 +187,17 @@ namespace Recipes
 					var from = Path.Combine(recipe.SourceFile.DirectoryName, recipe.Image);
 					if (File.Exists(from))
 					{
-						var to = Path.Combine(path, recipe.Image);
+						var to = Path.Combine(appsettings.Website.Output, recipe.Image);
 						File.Copy(from, to, true);
 					}
 				}
 			}
 
 			// Generate the index.html
-			WriteIndex(recipes, Path.Combine(path, "index.html"));
+			WriteIndex(recipes, Path.Combine(appsettings.Website.Output, "index.html"));
+
+			// Copy the stylesheet
+			File.Copy(Path.Combine(appsettings.InputPath, appsettings.Website.Stylesheet), Path.Combine(appsettings.Website.Output, appsettings.Website.Stylesheet), true);
 		}
 	}
 }

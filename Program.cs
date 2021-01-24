@@ -37,7 +37,7 @@ namespace Recipes
 
 			// Find all the JSON files in the input directory
 			var recipes = new List<Recipe>();
-			var files = Directory.EnumerateFiles(appsettings.Paths.Input, "*.json", SearchOption.AllDirectories);
+			var files = Directory.EnumerateFiles(appsettings.InputPath, "*.json", SearchOption.AllDirectories);
 			foreach (var filepath in files)
 			{
 				// Read the JSON and deserialize it
@@ -57,7 +57,7 @@ namespace Recipes
 			recipes.Sort();
 
 			// Generate all the outputs
-			GenerateHtml.Generate(recipes, appsettings.Paths.Output);
+			GenerateHtml.Generate(recipes);
 			GenerateEpub.Generate(recipes);
 		}
 	}
