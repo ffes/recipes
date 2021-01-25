@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Xml;
 using HtmlAgilityPack;
-using Microsoft.Extensions.Configuration;
 using Recipes.Models;
 
 namespace Recipes
@@ -21,8 +20,6 @@ namespace Recipes
 		/// <param name="head"></param>
 		private void AddBasicsToHead(HtmlNode head, string title)
 		{
-			var appsettings = Program.config.Get<AppSettings>();
-
 			// <meta charset="utf-8">
 			var meta = head.AppendChild(HtmlNode.CreateNode("<meta>"));
 			meta.Attributes.Add("charset", "utf-8");
@@ -113,8 +110,11 @@ namespace Recipes
 			}
 		}
 
-		private void WriteRecipe(Recipe recipe, string dir)
+		private void Write(string dir, Recipe recipe = null, Document document = null)
 		{
+			if (recipe == null && document == null)
+				return;
+
 			// It all starts with a document
 			var doc = new HtmlDocument();
 
@@ -128,14 +128,17 @@ namespace Recipes
 
 			// Add the head and fill it
 			var head = html.AppendChild(HtmlNode.CreateNode("<head></head>"));
-			AddBasicsToHead(head, recipe.Name);
+			AddBasicsToHead(head, recipe?.Name ?? document.Name);
 
 			// Add the body and fill it
 			var body = html.AppendChild(HtmlNode.CreateNode("<body></body>"));
-			AddRecipeToBody(body, recipe);
+			if (recipe != null)
+				AddRecipeToBody(body, recipe);
+			else
+				body.InnerHtml = document.Html;
 
 			// Save the document
-			doc.Save(Path.Combine(dir, recipe.FilenameHtml));
+			doc.Save(Path.Combine(dir, recipe?.FilenameHtml ?? document.FilenameHtml));
 		}
 
 		private void WriteIndex(string filename)
@@ -159,12 +162,23 @@ namespace Recipes
 			var body = html.AppendChild(HtmlNode.CreateNode("<body></body>"));
 
 			// Add the title at the top
-			var appsettings = Program.config.Get<AppSettings>();
 			body.AppendChild(HtmlNode.CreateNode($"<h1>{appsettings.EPUB.Name}</h1>"));
 
-			body.AppendChild(HtmlNode.CreateNode("<h2>Recepten</h2>"));
+			// First fill it a list of all the documents
+			if (Documents.Count > 0)
+			{
+				body.AppendChild(HtmlNode.CreateNode("<h2>Algemeen</h2>"));
+				var general = body.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
+				foreach (var document in Documents)
+				{
+					var li = general.AppendChild(HtmlNode.CreateNode("<li></li>"));
+					var a = li.AppendChild(HtmlNode.CreateNode($"<a>{document.Name}</a>"));
+					a.Attributes.Add("href", document.FilenameHtml);
+				}
+			}
 
-			// And fill it a simple list of all the recipes
+			// And then fill it a list of all the recipes
+			body.AppendChild(HtmlNode.CreateNode("<h2>Recepten</h2>"));
 			var list = body.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
 			foreach (var recipe in Recipes)
 			{
@@ -182,13 +196,11 @@ namespace Recipes
 
 		public void Generate()
 		{
-			var appsettings = Program.config.Get<AppSettings>();
-
-			// Generate the Basic HTML website
+			// Generate the recipes pages
 			foreach (var recipe in Recipes)
 			{
 				// Generate the HTML output
-				WriteRecipe(recipe, appsettings.Website.Output);
+				Write(appsettings.Website.Output, recipe: recipe);
 
 				// Copy the image file to the output directory
 				if (!string.IsNullOrWhiteSpace(recipe.Image))
@@ -200,6 +212,12 @@ namespace Recipes
 						File.Copy(from, to, true);
 					}
 				}
+			}
+
+			// Generate the markdown document pages
+			foreach (var document in Documents)
+			{
+				Write(appsettings.Website.Output, document: document);
 			}
 
 			// Generate the index.html

@@ -5,7 +5,6 @@ using System.Text;
 using System.Xml;
 using Ionic.Zip;
 using Ionic.Zlib;
-using Microsoft.Extensions.Configuration;
 using Recipes.Models;
 
 namespace Recipes
@@ -93,7 +92,6 @@ namespace Recipes
 			var doc = new XmlDocument();
 
 			// Add the html root element
-			var appsettings = Program.config.Get<AppSettings>();
 			var html = doc.CreateElement("html");
 			html.SetAttribute("xmlns", "http://www.w3.org/1999/xhtml");
 			html.SetAttribute("xml:lang", appsettings.EPUB.Language);
@@ -125,7 +123,6 @@ namespace Recipes
 			var doc = new XmlDocument();
 
 			// Add the html root element
-			var appsettings = Program.config.Get<AppSettings>();
 			var html = doc.CreateElement("html");
 			html.SetAttribute("xmlns", "http://www.w3.org/1999/xhtml");
 			html.SetAttribute("xml:lang", appsettings.EPUB.Language);
@@ -216,7 +213,6 @@ namespace Recipes
 			ncx.AppendChild(head);
 
 			// Add the values to the head
-			var appsettings = Program.config.Get<AppSettings>();
 			var meta_uid = doc.CreateElement("meta");
 			meta_uid.SetAttribute("name", "dtb:uid");
 			meta_uid.SetAttribute("content", appsettings.EPUB.BookId.ToString("D"));
@@ -289,8 +285,6 @@ namespace Recipes
 			package.AppendChild(metadata);
 
 			// Add the values to the metadata
-			var appsettings = Program.config.Get<AppSettings>();
-
 			var dc_title = doc.CreateElement("dc", "title", dc_namespace);
 			dc_title.InnerXml = appsettings.EPUB.Name;
 			metadata.AppendChild(dc_title);
@@ -388,8 +382,6 @@ namespace Recipes
 
 		public void Generate()
 		{
-			var appsettings = Program.config.Get<AppSettings>();
-
 			string baseDir = Path.Combine(Path.GetTempPath(), appsettings.EPUB.BookId.ToString("D"));
 			Directory.CreateDirectory(baseDir);
 
