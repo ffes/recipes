@@ -93,10 +93,6 @@ namespace Recipes
 					SourceFile = new FileInfo(filepath)
 				};
 
-				// If it doesn't start with a 0 is is not part of the texts we want to include
-				if (!doc.SourceFile.Name.StartsWith("0"))
-					continue;
-
 				var pipeline = new MarkdownPipelineBuilder()
 							.UsePipeTables()
 							.Build();
@@ -148,6 +144,9 @@ namespace Recipes
 
 				// Add the document to the list
 				documents.Add(doc);
+
+				// And add the ID
+				doc.Id = $"doc{documents.Count}";
 			}
 
 			return documents;
@@ -161,7 +160,7 @@ namespace Recipes
 			if (recipes == null)
 				return;
 
-			// Get all the documents
+			// Get all the markdown documents
 			var docs = GetDocuments();
 
 			// Generate all the outputs

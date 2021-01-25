@@ -72,6 +72,7 @@ namespace Recipes.Models
 
 	public class Document
 	{
+		public string Id { get; set; }
 		public string Name { get; set; }
 		public FileInfo SourceFile { get; set; }
 		public string FilenameHtml { get; set; }
