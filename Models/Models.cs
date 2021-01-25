@@ -69,4 +69,12 @@ namespace Recipes.Models
 			return Name.CompareTo(other.Name);
 		}
 	}
+
+	public class Document
+	{
+		public string Name { get; set; }
+		public FileInfo SourceFile { get; set; }
+		public string FilenameHtml { get; set; }
+		public string Html { get; set; }
+	}
 }

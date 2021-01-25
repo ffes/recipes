@@ -1,7 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
+using Markdig;
+using Markdig.Renderers;
+using Markdig.Syntax;
+using Markdig.Syntax.Inlines;
 using Microsoft.Extensions.Configuration;
 using Recipes.Models;
 
@@ -73,6 +78,81 @@ namespace Recipes
 			return recipes;
 		}
 
+		private static List<Document> GetDocuments()
+		{
+			// To store all the documents
+			var documents = new List<Document>();
+
+			// Go through the InputPath and see if there are any Markdown documents there
+			var appsettings = config.Get<AppSettings>();
+			var files = Directory.EnumerateFiles(appsettings.InputPath, "*.md", SearchOption.AllDirectories);
+			foreach (var filepath in files)
+			{
+				var doc = new Document
+				{
+					SourceFile = new FileInfo(filepath)
+				};
+
+				// If it doesn't start with a 0 is is not part of the texts we want to include
+				if (!doc.SourceFile.Name.StartsWith("0"))
+					continue;
+
+				var pipeline = new MarkdownPipelineBuilder()
+							.UsePipeTables()
+							.Build();
+
+				// Read the Markdown
+				var markdown = File.ReadAllText(filepath);
+
+				// Convert to a MarkdownDocument
+				var mddoc = Markdown.Parse(markdown, pipeline);
+
+				// Do smart things with the markdown, like getting the name from the first H1
+				foreach (var block in mddoc.ToList())
+				{
+					if (block is HeadingBlock headingBlock)
+					{
+						if (headingBlock.Level == 1)
+						{
+							if (headingBlock.Inline.FirstChild != null)
+							{
+								if (headingBlock.Inline.FirstChild is LiteralInline literalInline)
+								{
+									doc.Name = literalInline.Content.ToString();
+								}
+							}
+							break;
+						}
+					}
+				}
+
+				// If there is no H1 found, use the filename as the name...
+				if (string.IsNullOrWhiteSpace(doc.Name))
+				{
+					doc.Name = doc.SourceFile.Name;
+				}
+
+				// Convert the MarkdownDocument to a HTML string
+				var writer = new StringWriter();
+				var renderer = new HtmlRenderer(writer);
+				pipeline.Setup(renderer);
+				renderer.Render(mddoc);
+				writer.Flush();
+
+				// And store it
+				doc.Html = writer.ToString();
+
+				// Create the HTML filename
+				int len = doc.SourceFile.Extension.Length;
+				doc.FilenameHtml = doc.SourceFile.Name[0..^len] + ".html";
+
+				// Add the document to the list
+				documents.Add(doc);
+			}
+
+			return documents;
+		}
+
 		private static void Main(string[] args)
 		{
 			// First get all the recipes
@@ -80,6 +160,9 @@ namespace Recipes
 
 			if (recipes == null)
 				return;
+
+			// Get all the documents
+			var docs = GetDocuments();
 
 			// Generate all the outputs
 			var html = new GenerateHtml(recipes);
