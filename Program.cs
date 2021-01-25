@@ -59,17 +59,20 @@ namespace Recipes
 					Console.WriteLine($"Error parsing {filepath}: {ex}");
 				}
 
-				if (recipe != null)
-				{
-					recipes.Add(recipe);
+				if (recipe == null)
+					continue;
 
-					// Get the filename from the path and create the html filename
-					recipe.SourceFile = new FileInfo(filepath);
-					int len = recipe.SourceFile.Extension.Length;
-					recipe.FilenameHtml = recipe.SourceFile.Name[0..^len] + ".html";
+				if (string.IsNullOrWhiteSpace(recipe.Name))
+					continue;
 
-					recipe.Id = $"recipe{recipes.Count}";
-				}
+				recipes.Add(recipe);
+
+				// Get the filename from the path and create the html filename
+				recipe.SourceFile = new FileInfo(filepath);
+				int len = recipe.SourceFile.Extension.Length;
+				recipe.FilenameHtml = recipe.SourceFile.Name[0..^len] + ".html";
+
+				recipe.Id = $"recipe{recipes.Count}";
 			}
 
 			// Sort the recipes using Recipe.CompareTo()
