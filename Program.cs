@@ -160,7 +160,8 @@ namespace Recipes
 			// First get all the recipes
 			var recipes = GetRecipes();
 
-			if (recipes == null)
+			// Did we find any recipes?
+			if (recipes.Count == 0)
 				return;
 
 			// Get all the markdown documents
