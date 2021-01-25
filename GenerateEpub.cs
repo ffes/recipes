@@ -10,13 +10,10 @@ using Recipes.Models;
 
 namespace Recipes
 {
-	public class GenerateEpub
+	public class GenerateEpub: GenerateBase
 	{
-		private readonly List<Recipe> Recipes;
-
-		public GenerateEpub(List<Recipe> recipes)
+		public GenerateEpub(List<Recipe> recipes, List<Document> documents): base(recipes, documents)
 		{
-			Recipes = recipes;
 		}
 
 		private void AddBasicsToHead(XmlDocument doc, XmlElement head, string title)

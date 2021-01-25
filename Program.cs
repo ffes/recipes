@@ -165,10 +165,10 @@ namespace Recipes
 			var docs = GetDocuments();
 
 			// Generate all the outputs
-			var html = new GenerateHtml(recipes);
+			var html = new GenerateHtml(recipes, docs);
 			html.Generate();
 
-			var epub = new GenerateEpub(recipes);
+			var epub = new GenerateEpub(recipes, docs);
 			epub.Generate();
 		}
 	}
