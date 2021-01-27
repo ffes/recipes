@@ -15,8 +15,27 @@ namespace Recipes
 		{
 		}
 
-		private void AddBasicsToHead(XmlDocument doc, XmlElement head, string title)
+		private XmlDocument CreateXmlDocument(string language, string title)
 		{
+			// It all starts with a document
+			var doc = new XmlDocument();
+
+			// Add the html root element
+			var html = doc.CreateElement("html");
+			html.SetAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+			html.SetAttribute("xml:lang", language);
+			html.SetAttribute("lang", language);
+			doc.AppendChild(html);
+
+			// Create an XML declaration
+			var xmldecl = doc.CreateXmlDeclaration("1.0", null, null);
+			doc.InsertBefore(xmldecl, html);
+
+			// Create the head and add it to the html
+			var head = doc.CreateElement("head");
+			html.AppendChild(head);
+
+			// Add basics to head
 			var meta = doc.CreateElement("meta");
 			meta.SetAttribute("content", "http://www.w3.org/1999/xhtml; charset=utf-8");
 			meta.SetAttribute("http-equiv", "Content-Type");
@@ -25,10 +44,16 @@ namespace Recipes
 			var ttl = doc.CreateElement("title");
 			ttl.InnerXml = title;
 			head.AppendChild(ttl);
+
+			return doc;
 		}
 
-		private void AddRecipeToBody(XmlDocument doc, XmlElement body, Recipe recipe)
+		private void AddRecipeToHtml(XmlDocument doc, XmlNode html, Recipe recipe)
 		{
+			// First add the body element
+			var body = doc.CreateElement("body");
+			html.AppendChild(body);
+
 			// Add the name of the recipe
 			var title = doc.CreateElement("h1");
 			title.InnerXml = recipe.Name;
@@ -86,58 +111,46 @@ namespace Recipes
 			}
 		}
 
-		private void WriteRecipe(Recipe recipe, string dir)
+		private void AddDocumentToHtml(XmlDocument doc, XmlNode html, Document document)
 		{
+			// An XML document can only have one root element, so first we add the body around it
+			string xhtml = $"<body>{document.Html}</body>";
+
+			// Now we load that XHTML into another XmlDocument
+			var doc2 = new XmlDocument();
+			doc2.LoadXml(xhtml);
+
+			// Then we import that second XmlDocument in our XmlDocument
+			var imported = doc.ImportNode(doc2.DocumentElement, true);
+
+			// Now add the imported body node to the html
+			html.AppendChild(imported);
+		}
+
+		private void Write(string dir, Recipe recipe = null, Document document = null)
+		{
+			if (recipe == null && document == null)
+				return;
+
 			// It all starts with a document
-			var doc = new XmlDocument();
+			var doc = CreateXmlDocument(appsettings.EPUB.Language, recipe?.Name ?? document.Name);
+			var html = doc.SelectSingleNode("/html");
 
-			// Add the html root element
-			var html = doc.CreateElement("html");
-			html.SetAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-			html.SetAttribute("xml:lang", appsettings.EPUB.Language);
-			html.SetAttribute("lang", appsettings.EPUB.Language);
-			doc.AppendChild(html);
-
-			// Create an XML declaration
-			var xmldecl = doc.CreateXmlDeclaration("1.0", null, null);
-			doc.InsertBefore(xmldecl, html);
-
-			// Create the head and add it to the html
-			var head = doc.CreateElement("head");
-
-			html.AppendChild(head);
-			AddBasicsToHead(doc, head, recipe.Name);
-
-			// Add the body and fill it
-			var body = doc.CreateElement("body");
-			html.AppendChild(body);
-			AddRecipeToBody(doc, body, recipe);
+			// Add the recipe or the document
+			if (recipe != null)
+				AddRecipeToHtml(doc, html, recipe);
+			else
+				AddDocumentToHtml(doc, html, document);
 
 			// Save the document
-			doc.Save(Path.Combine(dir, recipe.FilenameHtml));
+			doc.Save(Path.Combine(dir, recipe?.FilenameHtml ?? document.FilenameHtml));
 		}
 
 		private void WriteCoverPage(string dir)
 		{
 			// It all starts with a document
-			var doc = new XmlDocument();
-
-			// Add the html root element
-			var html = doc.CreateElement("html");
-			html.SetAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-			html.SetAttribute("xml:lang", appsettings.EPUB.Language);
-			html.SetAttribute("lang", appsettings.EPUB.Language);
-			doc.AppendChild(html);
-
-			// Create an XML declaration
-			var xmldecl = doc.CreateXmlDeclaration("1.0", null, null);
-			doc.InsertBefore(xmldecl, html);
-
-			// Create the head and add it to the html
-			var head = doc.CreateElement("head");
-
-			html.AppendChild(head);
-			AddBasicsToHead(doc, head, "Cover page");
+			var doc = CreateXmlDocument(appsettings.EPUB.Language, "Cover page");
+			var html = doc.SelectSingleNode("/html");
 
 			// Add the body and fill it
 			var body = doc.CreateElement("body");
@@ -193,6 +206,25 @@ namespace Recipes
 			doc.Save(Path.Combine(dir, "container.xml"));
 		}
 
+		private XmlElement CreateTocNavPoint(XmlDocument doc, string id, int order, string name, string filename)
+		{
+			var navPoint = doc.CreateElement("navPoint");
+			navPoint.SetAttribute("id", id);
+			navPoint.SetAttribute("playOrder", order.ToString());
+
+			var navLabel = doc.CreateElement("navLabel");
+			var navLabelText = doc.CreateElement("text");
+			navLabelText.InnerXml = name;
+			navLabel.AppendChild(navLabelText);
+			navPoint.AppendChild(navLabel);
+
+			var content = doc.CreateElement("content");
+			content.SetAttribute("src", filename);
+			navPoint.AppendChild(content);
+
+			return navPoint;
+		}
+
 		private void WriteTOC(string dir)
 		{
 			// It all starts with a document
@@ -231,28 +263,21 @@ namespace Recipes
 			title.InnerXml = appsettings.EPUB.Name;
 			docTitle.AppendChild(title);
 
-			// Go through the recipes and and them to the actual table of content
+			// The actual TOC starts with a navMap
 			var navMap = doc.CreateElement("navMap");
 			ncx.AppendChild(navMap);
 
+			// First add the documents
 			int i = 0;
+			foreach (var document in Documents)
+			{
+				navMap.AppendChild(CreateTocNavPoint(doc, document.Id, ++i, document.Name, "OEBPS/" + document.FilenameHtml));
+			}
+
+			// Now add the recipes
 			foreach (var recipe in Recipes)
 			{
-				i++;
-				var navPoint = doc.CreateElement("navPoint");
-				navPoint.SetAttribute("id", recipe.Id);
-				navPoint.SetAttribute("playOrder", i.ToString());
-				navMap.AppendChild(navPoint);
-
-				var navLabel = doc.CreateElement("navLabel");
-				var navLabelText = doc.CreateElement("text");
-				navLabelText.InnerXml = recipe.Name;
-				navLabel.AppendChild(navLabelText);
-				navPoint.AppendChild(navLabel);
-
-				var content = doc.CreateElement("content");
-				content.SetAttribute("src", "OEBPS/" + recipe.FilenameHtml);    // Not using Path.Combine because it always needs to be '/'
-				navPoint.AppendChild(content);
+				navMap.AppendChild(CreateTocNavPoint(doc, recipe.Id, ++i, recipe.Name, "OEBPS/" + recipe.FilenameHtml));
 			}
 
 			doc.Save(Path.Combine(dir, "toc.ncx"));
@@ -327,6 +352,16 @@ namespace Recipes
 			coverpg.SetAttribute("media-type", "application/xhtml+xml");
 			manifest.AppendChild(coverpg);
 
+			// Now add all the documents to the manifest
+			foreach (var document in Documents)
+			{
+				var item = doc.CreateElement("item", opf_namespace);
+				item.SetAttribute("id", document.Id);
+				item.SetAttribute("href", "OEBPS/" + document.FilenameHtml);
+				item.SetAttribute("media-type", "application/xhtml+xml");
+				manifest.AppendChild(item);
+			}
+
 			// Now add all the recipes to the manifest
 			foreach (var recipe in Recipes)
 			{
@@ -346,6 +381,14 @@ namespace Recipes
 			var cover = doc.CreateElement("itemref", opf_namespace);
 			cover.SetAttribute("idref", coverpage);
 			spine.AppendChild(cover);
+
+			// Now add all the documents to the spine
+			foreach (var document in Documents)
+			{
+				var item = doc.CreateElement("itemref", opf_namespace);
+				item.SetAttribute("idref", document.Id);
+				spine.AppendChild(item);
+			}
 
 			// Add all the recipes to the spine
 			foreach (var recipe in Recipes)
@@ -394,13 +437,17 @@ namespace Recipes
 			WriteContentOpf(baseDir);
 			WriteTOC(baseDir);
 
-			// Write all the recipes in the OEBPS directory
+			// Write all the documents and recipes in the OEBPS directory
 			var contentDir = Path.Combine(baseDir, "OEBPS");
 			Directory.CreateDirectory(contentDir);
 
 			WriteCoverPage(contentDir);
+
+			foreach (var document in Documents)
+				Write(contentDir, document: document);
+
 			foreach (var recipe in Recipes)
-				WriteRecipe(recipe, contentDir);
+				Write(contentDir, recipe: recipe);
 
 			// Create the EPUB
 			CreateEpub(baseDir, appsettings.EPUB.Filename);
