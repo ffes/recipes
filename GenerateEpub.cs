@@ -72,7 +72,7 @@ namespace Recipes
 			{
 				var ts = XmlConvert.ToTimeSpan(recipe.TotalTime);
 				var time = doc.CreateElement("p");
-				time.InnerText = $"Totale bereidingstijd {ts.ToReadableString()}";
+				time.InnerText = $"Totale bereidingstijd: {ts.ToReadableString()}";
 				body.AppendChild(time);
 			}
 

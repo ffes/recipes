@@ -85,7 +85,7 @@ namespace Recipes
 			if (recipe.TotalTime != null)
 			{
 				var ts = XmlConvert.ToTimeSpan(recipe.TotalTime);
-				body.AppendChild(HtmlNode.CreateNode($"<p>Totale bereidingstijd {ts.ToReadableString()}</p>"));
+				body.AppendChild(HtmlNode.CreateNode($"<p>Totale bereidingstijd: {ts.ToReadableString()}</p>"));
 			}
 
 			// Add the yields
