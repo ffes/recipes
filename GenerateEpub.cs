@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -66,6 +67,38 @@ namespace Recipes
 				descr.InnerXml = recipe.Description;
 				body.AppendChild(descr);
 			}
+
+			// Add the author or publisher
+			var by = doc.CreateElement("p");
+			if (recipe.Author != null)
+			{
+				by.InnerXml = $"Gemaakt door {recipe.Author.Name}";
+			}
+			else if (!string.IsNullOrWhiteSpace(recipe.Publisher))
+			{
+				by.InnerXml= "Gepubliceerd door ";
+
+				// Add a link to original URL
+				if (!string.IsNullOrWhiteSpace(recipe.Url))
+				{
+					var pub = doc.CreateElement("a");
+					pub.InnerXml = recipe.Publisher;
+					pub.SetAttribute("href", recipe.Url);
+					by.AppendChild(pub);
+				}
+				else
+					by.InnerXml += recipe.Publisher;
+			}
+
+			// Add the publication date
+			if (recipe.DatePublished != null && recipe.DatePublished.Year > 1900)
+			{
+				if (string.IsNullOrWhiteSpace(by.InnerXml))
+					by.InnerXml = "Gepubliceerd ";
+
+				by.InnerXml += " in " + recipe.DatePublished.ToString("MMMM yyyy", CultureInfo.GetCultureInfo(recipe.InLanguage));
+			}
+			body.AppendChild(by);
 
 			// Add the total time
 			if (recipe.TotalTime != null)

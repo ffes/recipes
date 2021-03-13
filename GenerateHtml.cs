@@ -55,9 +55,13 @@ namespace Recipes
 				img.Attributes.Add("alt", recipe.Name);
 			}
 
-			// Add the publisher
+			// Add the author or publisher
 			var by = body.AppendChild(HtmlNode.CreateNode("<p></p>"));
-			if (!string.IsNullOrWhiteSpace(recipe.Publisher))
+			if (recipe.Author != null)
+			{
+				by.InnerHtml = $"Gemaakt door {recipe.Author.Name}";
+			}
+			else if (!string.IsNullOrWhiteSpace(recipe.Publisher))
 			{
 				by.InnerHtml = "Gepubliceerd door ";
 
