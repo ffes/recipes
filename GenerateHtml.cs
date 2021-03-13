@@ -145,7 +145,7 @@ namespace Recipes
 			doc.Save(Path.Combine(dir, recipe?.FilenameHtml ?? document.FilenameHtml));
 		}
 
-		private void WriteIndex(string filename)
+		private void WriteStartPage(string filename)
 		{
 			// It all starts with a document
 			var doc = new HtmlDocument();
@@ -225,7 +225,7 @@ namespace Recipes
 			}
 
 			// Generate the index.html
-			WriteIndex(Path.Combine(appsettings.Website.Output, "index.html"));
+			WriteStartPage(Path.Combine(appsettings.Website.Output, "index.html"));
 
 			// Copy the stylesheet
 			File.Copy(Path.Combine(appsettings.InputPath, appsettings.Website.Stylesheet), Path.Combine(appsettings.Website.Output, appsettings.Website.Stylesheet), true);
