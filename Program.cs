@@ -81,6 +81,60 @@ namespace Recipes
 			return recipes;
 		}
 
+		private static List<Keyword> GetKeywordsFromRecipes(List<Recipe> recipes)
+		{
+			var keywords = new HashSet<Keyword>();
+
+			foreach (var recipe in recipes)
+			{
+				var words = new HashSet<string>();
+
+				// Add the category
+				if (!string.IsNullOrWhiteSpace(recipe.RecipeCategory))
+					words.Add(recipe.RecipeCategory.Trim().ToLower());
+
+				// Add the cuisine
+				if (!string.IsNullOrWhiteSpace(recipe.RecipeCuisine))
+					words.Add(recipe.RecipeCuisine.Trim().ToLower());
+
+				// Go through the keywords
+				if (!string.IsNullOrWhiteSpace(recipe.Keywords))
+				{
+					foreach (var keyword in recipe.Keywords.Split(","))
+					{
+						words.Add(keyword.Trim().ToLower());
+					}
+				}
+
+				// Go through the collected words
+				foreach (var word in words)
+				{
+					// Add it to the hashset
+					var kw = new Keyword {
+						Name = word
+					};
+					keywords.Add(kw);
+
+					// Get it back from the hashset
+					if (keywords.TryGetValue(kw, out Keyword keyword))
+					{
+						// Add the recipe to hashset of recipes in this keyword
+						if (keyword.Recipes == null)
+							keyword.Recipes = new List<Recipe>();
+
+						if (!keyword.Recipes.Contains(recipe))
+							keyword.Recipes.Add(recipe);
+					}
+				}
+			}
+
+			// Convert the HashSet<> to a List<> and sort it
+			var list = keywords.ToList();
+			list.Sort();
+
+			return list;
+		}
+
 		private static List<Document> GetDocuments()
 		{
 			// To store all the documents
@@ -168,10 +222,10 @@ namespace Recipes
 			var docs = GetDocuments();
 
 			// Generate all the outputs
-			var html = new GenerateHtml(recipes, docs);
+			var html = new GenerateHtml(recipes, keywords, docs);
 			html.Generate();
 
-			var epub = new GenerateEpub(recipes, docs);
+			var epub = new GenerateEpub(recipes, keywords, docs);
 			epub.Generate();
 		}
 	}

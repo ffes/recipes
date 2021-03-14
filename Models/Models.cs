@@ -68,6 +68,19 @@ namespace Recipes.Models
 		{
 			return Name.CompareTo(other.Name);
 		}
+
+		public override int GetHashCode()
+		{
+			return Name.GetHashCode();
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is Recipe recipe)
+				return Name == recipe.Name;
+
+			return false;
+		}
 	}
 
 	public class Document
@@ -77,5 +90,29 @@ namespace Recipes.Models
 		public FileInfo SourceFile { get; set; }
 		public string FilenameHtml { get; set; }
 		public string Html { get; set; }
+	}
+
+	public class Keyword : IComparable<Keyword>
+	{
+		public string Name { get; set; }
+		public List<Recipe> Recipes { get; set; }
+
+		public override int GetHashCode()
+		{
+			return Name.GetHashCode();
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is Keyword kw)
+				return Name == kw.Name;
+
+			return false;
+		}
+
+		public int CompareTo([AllowNull] Keyword other)
+		{
+			return Name.CompareTo(other.Name);
+		}
 	}
 }

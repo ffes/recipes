@@ -12,7 +12,7 @@ namespace Recipes
 {
 	public class GenerateEpub: GenerateBase
 	{
-		public GenerateEpub(List<Recipe> recipes, List<Document> documents): base(recipes, documents)
+		public GenerateEpub(List<Recipe> recipes, List<Keyword> keywords, List<Document> documents): base(recipes, keywords, documents)
 		{
 		}
 
@@ -456,7 +456,7 @@ namespace Recipes
 			zip.Save();
 		}
 
-		public void Generate()
+		public override void Generate()
 		{
 			string baseDir = Path.Combine(Path.GetTempPath(), appsettings.EPUB.BookId.ToString("D"));
 			Directory.CreateDirectory(baseDir);

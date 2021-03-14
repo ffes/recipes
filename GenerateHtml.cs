@@ -10,7 +10,7 @@ namespace Recipes
 {
 	public class GenerateHtml: GenerateBase
 	{
-		public GenerateHtml(List<Recipe> recipes, List<Document> documents): base(recipes,documents)
+		public GenerateHtml(List<Recipe> recipes, List<Keyword> keywords, List<Document> documents): base(recipes, keywords, documents)
 		{
 		}
 
@@ -198,7 +198,7 @@ namespace Recipes
 			doc.Save(filename);
 		}
 
-		public void Generate()
+		public override void Generate()
 		{
 			// Generate the recipes pages
 			foreach (var recipe in Recipes)

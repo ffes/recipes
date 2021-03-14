@@ -4,17 +4,21 @@ using Recipes.Models;
 
 namespace Recipes
 {
-	public class GenerateBase
+	public abstract class GenerateBase
 	{
 		protected readonly List<Recipe> Recipes;
 		protected readonly List<Document> Documents;
+		protected readonly List<Keyword> Keywords;
 		protected readonly AppSettings appsettings;
 
-		public GenerateBase(List<Recipe> recipes, List<Document> documents)
+		public GenerateBase(List<Recipe> recipes, List<Keyword> keywords, List<Document> documents)
 		{
 			Recipes = recipes;
+			Keywords = keywords;
 			Documents = documents;
 			appsettings = Program.config.Get<AppSettings>();
 		}
+
+		public abstract void Generate();
 	}
 }
