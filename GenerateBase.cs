@@ -11,6 +11,8 @@ namespace Recipes
 		protected readonly List<Keyword> Keywords;
 		protected readonly AppSettings appsettings;
 
+		public virtual bool Enabled => false;
+
 		public GenerateBase(List<Recipe> recipes, List<Keyword> keywords, List<Document> documents)
 		{
 			Recipes = recipes;

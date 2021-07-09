@@ -14,6 +14,8 @@ namespace Recipes
 		{
 		}
 
+		public override bool Enabled => appsettings.Website.Enabled;
+
 		/// <summary>
 		/// Add the basic elements to the head.
 		/// </summary>

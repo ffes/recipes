@@ -16,6 +16,8 @@ namespace Recipes
 		{
 		}
 
+		public override bool Enabled => appsettings.EPUB.Enabled;
+
 		private XmlDocument CreateXmlDocument(string language, string title)
 		{
 			// It all starts with a document

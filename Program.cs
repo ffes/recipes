@@ -223,10 +223,12 @@ namespace Recipes
 
 			// Generate all the outputs
 			var html = new GenerateHtml(recipes, keywords, docs);
-			html.Generate();
+			if (html.Enabled)
+				html.Generate();
 
 			var epub = new GenerateEpub(recipes, keywords, docs);
-			epub.Generate();
+			if (epub.Enabled)
+				epub.Generate();
 		}
 	}
 }
