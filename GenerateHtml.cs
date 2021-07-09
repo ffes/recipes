@@ -5,12 +5,13 @@ using System.IO;
 using System.Xml;
 using HtmlAgilityPack;
 using Recipes.Models;
+using Schema.NET;
 
 namespace Recipes
 {
 	public class GenerateHtml: GenerateBase
 	{
-		public GenerateHtml(List<Recipe> recipes, List<Keyword> keywords, List<Document> documents): base(recipes, keywords, documents)
+		public GenerateHtml(List<MyRecipe> recipes, List<Keyword> keywords, List<Document> documents): base(recipes, keywords, documents)
 		{
 		}
 
@@ -42,6 +43,7 @@ namespace Recipes
 
 		private void AddRecipeToBody(HtmlNode body, Recipe recipe)
 		{
+			/* TODO
 			// Add the title at the start of the page
 			body.AppendChild(HtmlNode.CreateNode($"<h1>{recipe.Name}</h1>"));
 
@@ -114,10 +116,12 @@ namespace Recipes
 			{
 				instructions.AppendChild(HtmlNode.CreateNode($"<li>{instruction}</li>"));
 			}
+			*/
 		}
 
 		private void Write(string dir, Recipe recipe = null, Document document = null)
 		{
+			/* TODO
 			if (recipe == null && document == null)
 				return;
 
@@ -145,6 +149,7 @@ namespace Recipes
 
 			// Save the document
 			doc.Save(Path.Combine(dir, recipe?.FilenameHtml ?? document.FilenameHtml));
+			*/
 		}
 
 		private void WriteStartPage(string filename)
@@ -202,6 +207,7 @@ namespace Recipes
 
 		public override void Generate()
 		{
+			/* TODO
 			// Generate the recipes pages
 			foreach (var recipe in Recipes)
 			{
@@ -231,6 +237,7 @@ namespace Recipes
 
 			// Copy the stylesheet
 			File.Copy(Path.Combine(appsettings.InputPath, appsettings.Website.Stylesheet), Path.Combine(appsettings.Website.Output, appsettings.Website.Stylesheet), true);
+			*/
 		}
 	}
 }

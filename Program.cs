@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using Markdig;
 using Markdig.Renderers;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Recipes.Models;
+using Schema.NET;
 
 namespace Recipes
 {
@@ -31,38 +32,32 @@ namespace Recipes
 				.Build();
 		}
 
-		private static List<Recipe> GetRecipes()
+		private static List<MyRecipe> GetRecipes()
 		{
 			var appsettings = config.Get<AppSettings>();
 
-			// Set the JSON options
-			var options = new JsonSerializerOptions
-			{
-				PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-			};
-
 			// Find all the JSON files in the input directory
-			var recipes = new List<Recipe>();
+			var recipes = new List<MyRecipe>();
 			var files = Directory.EnumerateFiles(appsettings.InputPath, "*.json", SearchOption.AllDirectories);
 			foreach (var filepath in files)
 			{
 				// Read the JSON and deserialize it
 				var document = File.ReadAllText(filepath);
 
-				Recipe recipe = null;
+				MyRecipe recipe = null;
 				try
 				{
-					recipe = JsonSerializer.Deserialize<Recipe>(document, options);
+					recipe = SchemaSerializer.DeserializeObject<MyRecipe>(document);
 				}
-				catch (JsonException ex)
+				catch (JsonReaderException ex)
 				{
-					Console.WriteLine($"Error parsing {filepath}: {ex}");
+					Console.WriteLine($"Error parsing {filepath}: {ex.Message}");
 				}
 
 				if (recipe == null)
 					continue;
 
-				if (string.IsNullOrWhiteSpace(recipe.Name))
+				if (recipe.Name.Count == 0)
 					continue;
 
 				recipes.Add(recipe);
@@ -72,7 +67,7 @@ namespace Recipes
 				int len = recipe.SourceFile.Extension.Length;
 				recipe.FilenameHtml = recipe.SourceFile.Name[0..^len] + ".html";
 
-				recipe.Id = $"recipe{recipes.Count}";
+				recipe.EpubID = $"recipe{recipes.Count}";
 			}
 
 			// Sort the recipes using Recipe.CompareTo()
@@ -81,7 +76,7 @@ namespace Recipes
 			return recipes;
 		}
 
-		private static List<Keyword> GetKeywordsFromRecipes(List<Recipe> recipes)
+		private static List<Keyword> GetKeywordsFromRecipes(List<MyRecipe> recipes)
 		{
 			var keywords = new HashSet<Keyword>();
 
@@ -90,19 +85,24 @@ namespace Recipes
 				var words = new HashSet<string>();
 
 				// Add the category
-				if (!string.IsNullOrWhiteSpace(recipe.RecipeCategory))
-					words.Add(recipe.RecipeCategory.Trim().ToLower());
+				foreach (var cat in recipe.RecipeCategory)
+					words.Add(cat.Trim().ToLower());
 
 				// Add the cuisine
-				if (!string.IsNullOrWhiteSpace(recipe.RecipeCuisine))
-					words.Add(recipe.RecipeCuisine.Trim().ToLower());
+				foreach (var cuisine in recipe.RecipeCuisine)
+					words.Add(cuisine.Trim().ToLower());
 
 				// Go through the keywords
-				if (!string.IsNullOrWhiteSpace(recipe.Keywords))
+				if (recipe.Keywords.Count > 0)
 				{
-					foreach (var keyword in recipe.Keywords.Split(","))
+					var (str, _) = recipe.Keywords;
+
+					foreach (var keywrds in str)
 					{
-						words.Add(keyword.Trim().ToLower());
+						foreach (var w in keywrds.Split(","))
+						{
+							words.Add(w.Trim().ToLower());
+						}
 					}
 				}
 
@@ -120,7 +120,7 @@ namespace Recipes
 					{
 						// Add the recipe to hashset of recipes in this keyword
 						if (keyword.Recipes == null)
-							keyword.Recipes = new List<Recipe>();
+							keyword.Recipes = new List<MyRecipe>();
 
 						if (!keyword.Recipes.Contains(recipe))
 							keyword.Recipes.Add(recipe);
@@ -203,7 +203,7 @@ namespace Recipes
 				documents.Add(doc);
 
 				// And add the ID
-				doc.Id = $"doc{documents.Count}";
+				doc.EpubID = $"doc{documents.Count}";
 			}
 
 			return documents;
@@ -217,6 +217,19 @@ namespace Recipes
 			// Did we find any recipes?
 			if (recipes.Count == 0)
 				return;
+
+			// Get all the keywords from the recipes
+			var keywords = GetKeywordsFromRecipes(recipes);
+
+			// For now, just print the result
+			foreach (var kw in keywords)
+			{
+				Console.WriteLine(kw.Name);
+				foreach (var recipe in kw.Recipes)
+				{
+					Console.WriteLine($"  {recipe.Name.First()}");
+				}
+			}
 
 			// Get all the markdown documents
 			var docs = GetDocuments();
