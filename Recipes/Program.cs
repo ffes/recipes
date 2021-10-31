@@ -344,16 +344,6 @@ namespace Recipes
 			// Get all the keywords from the recipes
 			var keywords = GetKeywordsFromRecipes(recipes);
 
-			// For now, just print the result
-			foreach (var kw in keywords)
-			{
-				Console.WriteLine(kw.Name);
-				foreach (var recipe in kw.Recipes)
-				{
-					Console.WriteLine($"  {recipe.Name}");
-				}
-			}
-
 			// Get all the markdown documents
 			var docs = GetDocuments();
 

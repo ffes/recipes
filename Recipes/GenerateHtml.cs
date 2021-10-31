@@ -144,6 +144,46 @@ namespace Recipes
 			doc.Save(Path.Combine(dir, recipe?.FilenameHtml ?? document.FilenameHtml));
 		}
 
+		private void WriteKeywordsPage(string filename)
+		{
+			// It all starts with a document
+			var doc = new HtmlDocument();
+
+			// Add the html5 doctype
+			var doctype = doc.CreateComment("<!doctype html>");
+			doc.DocumentNode.AppendChild(doctype);
+
+			// Create html document
+			var html = HtmlNode.CreateNode("<html></html>");
+			doc.DocumentNode.AppendChild(html);
+
+			// Add the head and fill it
+			var head = html.AppendChild(HtmlNode.CreateNode("<head></head>"));
+			AddBasicsToHead(head, "Index");
+
+			// Add the body
+			var body = html.AppendChild(HtmlNode.CreateNode("<body></body>"));
+
+			// Add the title at the top
+			body.AppendChild(HtmlNode.CreateNode($"<h1>Index</h1>"));
+
+			foreach (var keyword in Keywords)
+			{
+				var p = body.AppendChild(HtmlNode.CreateNode($"<p>{keyword.Name}</p>"));
+
+				var list = body.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
+				foreach (var recipe in keyword.Recipes)
+				{
+					var li = list.AppendChild(HtmlNode.CreateNode("<li></li>"));
+					var a = li.AppendChild(HtmlNode.CreateNode($"<a>{recipe.Name}</a>"));
+					a.Attributes.Add("href", recipe.FilenameHtml);
+				}
+			}
+
+			// Save the document
+			doc.Save(filename);
+		}
+
 		private void WriteStartPage(string filename)
 		{
 			// It all starts with a document
@@ -190,6 +230,15 @@ namespace Recipes
 				a.Attributes.Add("href", recipe.FilenameHtml);
 			}
 
+			// Add a line to the index page (that is based on the keywords)
+			if (Keywords.Count > 0)
+			{
+				var header = HtmlNode.CreateNode("<h2></h2>");
+				var a = header.AppendChild(HtmlNode.CreateNode($"<a>Index</a>"));
+				a.Attributes.Add("href", "keywords.html");
+				body.AppendChild(header);
+			}
+
 			// Add the publication date
 			body.AppendChild(HtmlNode.CreateNode($"<p>{DateTime.Now:d MMMM yyyy}</p>"));
 
@@ -222,6 +271,9 @@ namespace Recipes
 			{
 				Write(appsettings.Website.Output, document: document);
 			}
+
+			// Generate the index page based on the keywords
+			WriteKeywordsPage(Path.Combine(appsettings.Website.Output, "keywords.html"));
 
 			// Generate the index.html
 			WriteStartPage(Path.Combine(appsettings.Website.Output, "index.html"));
