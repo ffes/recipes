@@ -11,7 +11,7 @@ namespace Recipes
 {
 	public class GenerateHtml: GenerateBase
 	{
-		public GenerateHtml(List<MyRecipe> recipes, List<Keyword> keywords, List<Document> documents): base(recipes, keywords, documents)
+		public GenerateHtml(List<RecipeModel> recipes, List<Keyword> keywords, List<Document> documents): base(recipes, keywords, documents)
 		{
 		}
 

@@ -37,7 +37,8 @@ namespace Recipes
 			var newModel = new RecipeModel
 			{
 				Name = recipe.Name,
-				Description = recipe.Description
+				Description = recipe.Description,
+				InLanguage = recipe.InLanguage
 			};
 
 			// Is there an author
@@ -158,22 +159,22 @@ namespace Recipes
 			return newModel;
 		}
 
-		private static List<MyRecipe> GetRecipes()
+		private static List<RecipeModel> GetRecipes()
 		{
 			var appsettings = config.Get<AppSettings>();
 
 			// Find all the JSON files in the input directory
-			var recipes = new List<MyRecipe>();
+			var recipes = new List<RecipeModel>();
 			var files = Directory.EnumerateFiles(appsettings.InputPath, "*.json", SearchOption.AllDirectories);
 			foreach (var filepath in files)
 			{
 				// Read the JSON and deserialize it
 				var document = File.ReadAllText(filepath);
 
-				MyRecipe recipe = null;
+				Recipe recipe = null;
 				try
 				{
-					recipe = SchemaSerializer.DeserializeObject<MyRecipe>(document);
+					recipe = SchemaSerializer.DeserializeObject<Recipe>(document);
 				}
 				catch (JsonReaderException ex)
 				{
@@ -186,14 +187,15 @@ namespace Recipes
 				if (recipe.Name.Count == 0)
 					continue;
 
-				recipes.Add(recipe);
+				var r = FromRecipe(recipe);
+				recipes.Add(r);
 
 				// Get the filename from the path and create the html filename
-				recipe.SourceFile = new FileInfo(filepath);
-				int len = recipe.SourceFile.Extension.Length;
-				recipe.FilenameHtml = recipe.SourceFile.Name[0..^len] + ".html";
+				r.SourceFile = new FileInfo(filepath);
+				int len = r.SourceFile.Extension.Length;
+				r.FilenameHtml = r.SourceFile.Name[0..^len] + ".html";
 
-				recipe.EpubID = $"recipe{recipes.Count}";
+				r.EpubID = $"recipe{recipes.Count}";
 			}
 
 			// Sort the recipes using Recipe.CompareTo()
@@ -202,7 +204,7 @@ namespace Recipes
 			return recipes;
 		}
 
-		private static List<Keyword> GetKeywordsFromRecipes(List<MyRecipe> recipes)
+		private static List<Keyword> GetKeywordsFromRecipes(List<RecipeModel> recipes)
 		{
 			var keywords = new HashSet<Keyword>();
 
@@ -211,24 +213,19 @@ namespace Recipes
 				var words = new HashSet<string>();
 
 				// Add the category
-				foreach (var cat in recipe.RecipeCategory)
-					words.Add(cat.Trim().ToLower());
+				if (!string.IsNullOrWhiteSpace(recipe.Category))
+					words.Add(recipe.Category.ToLower());
 
 				// Add the cuisine
-				foreach (var cuisine in recipe.RecipeCuisine)
-					words.Add(cuisine.Trim().ToLower());
+				if (!string.IsNullOrWhiteSpace(recipe.Cuisine))
+					words.Add(recipe.Cuisine.ToLower());
 
 				// Go through the keywords
-				if (recipe.Keywords.Count > 0)
+				if (recipe.Keywords != null)
 				{
-					var (str, _) = recipe.Keywords;
-
-					foreach (var keywrds in str)
+					foreach (var keyword in recipe.Keywords)
 					{
-						foreach (var w in keywrds.Split(","))
-						{
-							words.Add(w.Trim().ToLower());
-						}
+						words.Add(keyword);
 					}
 				}
 
@@ -246,7 +243,7 @@ namespace Recipes
 					{
 						// Add the recipe to hashset of recipes in this keyword
 						if (keyword.Recipes == null)
-							keyword.Recipes = new List<MyRecipe>();
+							keyword.Recipes = new List<RecipeModel>();
 
 						if (!keyword.Recipes.Contains(recipe))
 							keyword.Recipes.Add(recipe);
@@ -353,7 +350,7 @@ namespace Recipes
 				Console.WriteLine(kw.Name);
 				foreach (var recipe in kw.Recipes)
 				{
-					Console.WriteLine($"  {recipe.Name.First()}");
+					Console.WriteLine($"  {recipe.Name}");
 				}
 			}
 

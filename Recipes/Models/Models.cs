@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using Schema.NET;
 
 namespace Recipes.Models
 {
-	public class RecipeModel
+	public class RecipeModel: IComparable<RecipeModel>
 	{
 		public string Name { get; set; }
 		public string Description { get; set; }
+		public string InLanguage { get; set; }
 		public string Author { get; set; }
 		public string Publisher { get; set; }
 		public Uri PublishedURL { get; set; }
@@ -28,15 +28,8 @@ namespace Recipes.Models
 		public FileInfo SourceFile { get; set; }
 		public string FilenameHtml { get; set; }
 		public string EpubID { get; set; }
-	}
 
-	public class MyRecipe: Recipe, IComparable<MyRecipe>
-	{
-		public FileInfo SourceFile { get; set; }
-		public string FilenameHtml { get; set; }
-		public string EpubID { get; set; }
-
-		public int CompareTo([AllowNull] MyRecipe other)
+		public int CompareTo([AllowNull] RecipeModel other)
 		{
 			string name = Name;
 			return name.CompareTo(other.Name);
@@ -55,7 +48,7 @@ namespace Recipes.Models
 	public class Keyword: IComparable<Keyword>
 	{
 		public string Name { get; set; }
-		public List<MyRecipe> Recipes { get; set; }
+		public List<RecipeModel> Recipes { get; set; }
 
 		public override int GetHashCode()
 		{

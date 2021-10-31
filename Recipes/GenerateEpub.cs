@@ -2,19 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Xml;
 using Ionic.Zip;
 using Ionic.Zlib;
 using Recipes.Models;
-using Schema.NET;
 
 namespace Recipes
 {
 	public class GenerateEpub: GenerateBase
 	{
-		public GenerateEpub(List<MyRecipe> recipes, List<Keyword> keywords, List<Document> documents): base(recipes, keywords, documents)
+		public GenerateEpub(List<RecipeModel> recipes, List<Keyword> keywords, List<Document> documents): base(recipes, keywords, documents)
 		{
 		}
 
@@ -53,7 +51,7 @@ namespace Recipes
 			return doc;
 		}
 
-		private void AddRecipeToHtml(XmlDocument doc, XmlNode html, Recipe recipe)
+		private void AddRecipeToHtml(XmlDocument doc, XmlNode html, RecipeModel recipe)
 		{
 			// First add the body element
 			var body = doc.CreateElement("body");
@@ -65,7 +63,7 @@ namespace Recipes
 			body.AppendChild(title);
 
 			// Add the description
-			if (recipe.Description.Count > 0)
+			if (!string.IsNullOrWhiteSpace(recipe.Description))
 			{
 				var descr = doc.CreateElement("p");
 				descr.InnerXml = recipe.Description;
@@ -74,93 +72,67 @@ namespace Recipes
 
 			// Add the author or publisher
 			var by = doc.CreateElement("p");
-			if (recipe.Author.HasValue)
+			if (!string.IsNullOrWhiteSpace(recipe.Author))
 			{
-				var (org, person) = recipe.Author;
-				by.InnerXml = $"Gemaakt door " + (person.Count() > 0 ? person.First().Name : org.First().Name);
+				by.InnerXml = $"Gemaakt door {recipe.Author}";
 			}
-			else if (recipe.Publisher.HasValue)
+			else if (!string.IsNullOrWhiteSpace(recipe.Publisher))
 			{
 				by.InnerXml= "Gepubliceerd door ";
 
-				var (org, person) = recipe.Publisher;
-				string publisher = (org.Count() > 0 ? org.First().Name : person.First().Name);
-
 				// Add a link to original URL
-				if (recipe.Url.Count > 0)
+				if (recipe.PublishedURL != null)
 				{
 					var pub = doc.CreateElement("a");
-					pub.InnerXml = publisher;
+					pub.InnerXml = recipe.Publisher;
 
-					var url = recipe.Url.First().AbsoluteUri;
+					var url = recipe.PublishedURL.AbsoluteUri;
 					pub.SetAttribute("href", url);
 					by.AppendChild(pub);
 				}
 				else
-					by.InnerXml += publisher;
+					by.InnerXml += recipe.Publisher;
 			}
 
 			// Add the publication date
-			if (recipe.DatePublished.HasValue)
+			if (recipe.DatePublished.Year > 1900)
 			{
-				var (_, date, _) = recipe.DatePublished;
+				if (string.IsNullOrWhiteSpace(by.InnerXml))
+					by.InnerXml = "Gepubliceerd";
 
-				if (date.Count() > 0)
-				{
-					if (string.IsNullOrWhiteSpace(by.InnerXml))
-						by.InnerXml = "Gepubliceerd";
-
-					var d = date.First() ?? new DateTime();
-					by.InnerXml += " in " + d.ToString("MMMM yyyy", CultureInfo.GetCultureInfo(recipe.InLanguage));
-				}
+				by.InnerXml += " in " + recipe.DatePublished.ToString("MMMM yyyy", CultureInfo.GetCultureInfo(recipe.InLanguage));
 			}
 			body.AppendChild(by);
 
 			// Add the preparation time
-			if (recipe.PrepTime.Count > 0)
+			if (recipe.PrepTime.TotalMinutes > 0)
 			{
-				var ts = recipe.PrepTime.First() ?? new TimeSpan();
 				var time = doc.CreateElement("p");
-				time.InnerText = $"Voorbereidingstijd: {ts.ToReadableString()}";
+				time.InnerText = $"Voorbereidingstijd: {recipe.PrepTime.ToReadableString()}";
 				body.AppendChild(time);
 			}
 
 			// Add the cook time
-			if (recipe.CookTime.Count > 0)
+			if (recipe.CookTime.TotalMinutes > 0)
 			{
-				var ts = recipe.CookTime.First() ?? new TimeSpan();
 				var time = doc.CreateElement("p");
-				time.InnerText = $"Bereidingstijd: {ts.ToReadableString()}";
+				time.InnerText = $"Bereidingstijd: {recipe.CookTime.ToReadableString()}";
 				body.AppendChild(time);
 			}
 
 			// Add the total time
-			if (recipe.TotalTime.Count > 0)
+			if (recipe.TotalTime.TotalMinutes > 0)
 			{
-				var ts = recipe.TotalTime.First() ?? new TimeSpan();
 				var time = doc.CreateElement("p");
-				time.InnerText = $"Totale bereidingstijd: {ts.ToReadableString()}";
+				time.InnerText = $"Totale bereidingstijd: {recipe.TotalTime.ToReadableString()}";
 				body.AppendChild(time);
 			}
 
 			// Add how much the recipe yields
-			if (recipe.RecipeYield.HasValue)
+			if (!string.IsNullOrWhiteSpace(recipe.Yield))
 			{
 				var yields = doc.CreateElement("p");
-				yields.InnerText = "Voor";
-
-				var (quantity, str) = recipe.RecipeYield;
-				if (quantity.Count() > 0)
-				{
-					foreach (var q in quantity)
-					{
-						var (_, d, _, _) = q.Value;
-						yields.InnerText += $" {d.First()} {q.UnitText.First()}";
-					}
-				}
-				else
-					yields.InnerText += " " + string.Join(", ", str.ToArray());
-
+				yields.InnerText = $"Voor {recipe.Yield}";
 				body.AppendChild(yields);
 			}
 
@@ -172,7 +144,7 @@ namespace Recipes
 			var ingredients = doc.CreateElement("ul");
 			body.AppendChild(ingredients);
 
-			foreach (var ingredient in recipe.RecipeIngredient)
+			foreach (var ingredient in recipe.Ingredients)
 			{
 				var li = doc.CreateElement("li");
 				li.InnerText = ingredient;
@@ -186,7 +158,7 @@ namespace Recipes
 
 			var instructions = doc.CreateElement("ol");
 			body.AppendChild(instructions);
-			foreach (var instruction in recipe.RecipeInstructions)
+			foreach (var instruction in recipe.Instructions)
 			{
 				var li = doc.CreateElement("li");
 				li.InnerXml = instruction.ToString();
@@ -210,7 +182,7 @@ namespace Recipes
 			html.AppendChild(imported);
 		}
 
-		private void Write(string dir, MyRecipe recipe = null, Document document = null)
+		private void Write(string dir, RecipeModel recipe = null, Document document = null)
 		{
 			if (recipe == null && document == null)
 				return;

@@ -20,6 +20,15 @@ namespace Recipes.Test
 		}
 
 		[TestMethod]
+		public void InLanguage()
+		{
+			var recipe = ParseRecipeFromJSON(GetRecipeWithPublisher());
+			var newModel = Program.FromRecipe(recipe);
+
+			Assert.AreEqual("en", newModel.InLanguage);
+		}
+
+		[TestMethod]
 		public void Author()
 		{
 			var recipe = ParseRecipeFromJSON(GetBasicRecipe());
@@ -258,6 +267,7 @@ namespace Recipes.Test
 		@"{
 			""@context"": ""https://schema.org"",
 			""@type"": ""Recipe"",
+			""inLanguage"": ""en"",
 			""publisher"": {
 				""@type"": ""Organization"",
 				""name"": ""Some Magazine""
