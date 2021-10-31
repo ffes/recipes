@@ -6,6 +6,27 @@ using Schema.NET;
 
 namespace Recipes.Models
 {
+	public class RecipeModel
+	{
+		public string Name { get; set; }
+		public string Description { get; set; }
+		public string Author { get; set; }
+		public string Publisher { get; set; }
+		public Uri PublishedURL { get; set; }
+		public TimeSpan PrepTime { get; set; }
+		public TimeSpan CookTime { get; set; }
+		public TimeSpan TotalTime { get; set; }
+		public string Yields { get; set; }
+		public string[] Ingredients { get; set; }
+		public string[] Instructions { get; set; }
+		public string[] Keywords { get; set; }
+
+		// Additonal fields to get the epub and website generated
+		public FileInfo SourceFile { get; set; }
+		public string FilenameHtml { get; set; }
+		public string EpubID { get; set; }
+	}
+
 	public class MyRecipe: Recipe, IComparable<MyRecipe>
 	{
 		public FileInfo SourceFile { get; set; }

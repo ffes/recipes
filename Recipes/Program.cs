@@ -13,7 +13,7 @@ using Schema.NET;
 
 namespace Recipes
 {
-	internal class Program
+	public class Program
 	{
 		public static readonly IConfigurationRoot config = null;
 
@@ -30,6 +30,60 @@ namespace Recipes
 				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 				.AddJsonFile($"appsettings.{environment}.json", optional: true)
 				.Build();
+		}
+
+		public static RecipeModel FromRecipe(Recipe recipe)
+		{
+			var newModel = new RecipeModel
+			{
+				Name = recipe.Name,
+				Description = recipe.Description
+			};
+
+			// Is there an author
+			if (recipe.Author.HasValue)
+			{
+				var (org, person) = recipe.Author;
+				newModel.Author = person.Count() > 0 ? person.First().Name : org.First().Name;
+			}
+
+			// Is there a publisher
+			if (recipe.Publisher.HasValue)
+			{
+				var (org, person) = recipe.Publisher;
+				newModel.Publisher = (org.Count() > 0 ? org.First().Name : person.First().Name);
+			}
+
+			// Add URL where this recipe was originally published
+			if (recipe.Url.Count > 0)
+			{
+				newModel.PublishedURL = recipe.Url.First();
+			}
+
+			// Add the preparation time
+			if (recipe.PrepTime.Count > 0)
+			{
+				newModel.PrepTime = recipe.PrepTime.First() ?? new TimeSpan();
+			}
+
+			// Add the cook time
+			if (recipe.CookTime.Count > 0)
+			{
+				newModel.CookTime = recipe.CookTime.First() ?? new TimeSpan();
+			}
+
+			// Add the total time
+			if (recipe.TotalTime.Count > 0)
+			{
+				newModel.TotalTime = recipe.TotalTime.First() ?? new TimeSpan();
+			}
+			else
+			{
+				// No TotalTime in the recipe, so add prep time and cook time
+				newModel.TotalTime = newModel.PrepTime + newModel.CookTime;
+			}
+
+			return newModel;
 		}
 
 		private static List<MyRecipe> GetRecipes()
