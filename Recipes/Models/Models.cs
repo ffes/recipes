@@ -13,13 +13,16 @@ namespace Recipes.Models
 		public string Author { get; set; }
 		public string Publisher { get; set; }
 		public Uri PublishedURL { get; set; }
+		public DateTime DatePublished { get; set; }
+		public string Category { get; set; }
+		public string Cuisine { get; set; }
 		public TimeSpan PrepTime { get; set; }
 		public TimeSpan CookTime { get; set; }
 		public TimeSpan TotalTime { get; set; }
-		public string Yields { get; set; }
-		public string[] Ingredients { get; set; }
-		public string[] Instructions { get; set; }
-		public string[] Keywords { get; set; }
+		public string Yield { get; set; }
+		public List<string> Ingredients { get; set; }
+		public List<string> Instructions { get; set; }
+		public List<string> Keywords { get; set; }
 
 		// Additonal fields to get the epub and website generated
 		public FileInfo SourceFile { get; set; }

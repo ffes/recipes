@@ -60,6 +60,27 @@ namespace Recipes
 				newModel.PublishedURL = recipe.Url.First();
 			}
 
+			// Add the date
+			if (recipe.DatePublished.HasValue)
+			{
+				var (_, date, _) = recipe.DatePublished;
+
+				if (date.Count() > 0)
+					newModel.DatePublished = date.First() ?? new DateTime();
+			}
+
+			// Add the category
+			if (recipe.RecipeCategory.Count > 0)
+			{
+				newModel.Category = recipe.RecipeCategory.First();
+			}
+
+			// Add the cuisine
+			if (recipe.RecipeCuisine.Count > 0)
+			{
+				newModel.Cuisine = recipe.RecipeCuisine.First();
+			}
+
 			// Add the preparation time
 			if (recipe.PrepTime.Count > 0)
 			{
@@ -81,6 +102,57 @@ namespace Recipes
 			{
 				// No TotalTime in the recipe, so add prep time and cook time
 				newModel.TotalTime = newModel.PrepTime + newModel.CookTime;
+			}
+
+			// Add the Yield
+			if (recipe.RecipeYield.HasValue)
+			{
+				var (quantity, str) = recipe.RecipeYield;
+				if (quantity.Count() > 0)
+				{
+					foreach (var q in quantity)
+					{
+						var (_, d, _, _) = q.Value;
+						newModel.Yield += $"{d.First()} {q.UnitText.First()}";
+					}
+				}
+				else
+					newModel.Yield = string.Join(", ", str.ToArray());
+			}
+
+			// Add the ingredients
+			foreach (var ingredient in recipe.RecipeIngredient)
+			{
+				if (newModel.Ingredients == null)
+					newModel.Ingredients = new List<string>();
+
+				newModel.Ingredients.Add(ingredient);
+			}
+
+			// Add the instructions
+			foreach (var instruction in recipe.RecipeInstructions)
+			{
+				if (newModel.Instructions == null)
+					newModel.Instructions = new List<string>();
+
+				newModel.Instructions.Add(instruction.ToString());
+			}
+
+			// Add the keywords
+			if (recipe.Keywords.Count > 0)
+			{
+				var (str, _) = recipe.Keywords;
+
+				foreach (var keywrds in str)
+				{
+					foreach (var w in keywrds.Split(","))
+					{
+						if (newModel.Keywords == null)
+							newModel.Keywords = new List<string>();
+
+						newModel.Keywords.Add(w.Trim().ToLower());
+					}
+				}
 			}
 
 			return newModel;
