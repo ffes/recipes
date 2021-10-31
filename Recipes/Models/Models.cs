@@ -10,6 +10,7 @@ namespace Recipes.Models
 		public string Name { get; set; }
 		public string Description { get; set; }
 		public string InLanguage { get; set; }
+		public string Image { get; set; }
 		public string Author { get; set; }
 		public string Publisher { get; set; }
 		public Uri PublishedURL { get; set; }

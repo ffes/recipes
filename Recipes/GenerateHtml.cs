@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Xml;
 using HtmlAgilityPack;
 using Recipes.Models;
-using Schema.NET;
 
 namespace Recipes
 {
@@ -41,9 +39,8 @@ namespace Recipes
 			head.AppendChild(HtmlNode.CreateNode($"<title>{title}</title>"));
 		}
 
-		private void AddRecipeToBody(HtmlNode body, Recipe recipe)
+		private void AddRecipeToBody(HtmlNode body, RecipeModel recipe)
 		{
-			/* TODO
 			// Add the title at the start of the page
 			body.AppendChild(HtmlNode.CreateNode($"<h1>{recipe.Name}</h1>"));
 
@@ -61,19 +58,19 @@ namespace Recipes
 
 			// Add the author or publisher
 			var by = body.AppendChild(HtmlNode.CreateNode("<p></p>"));
-			if (recipe.Author != null)
+			if (!string.IsNullOrWhiteSpace(recipe.Author))
 			{
-				by.InnerHtml = $"Gemaakt door {recipe.Author.Name}";
+				by.InnerHtml = $"Gemaakt door {recipe.Author}";
 			}
 			else if (!string.IsNullOrWhiteSpace(recipe.Publisher))
 			{
 				by.InnerHtml = "Gepubliceerd door ";
 
 				// Add a link to original URL
-				if (!string.IsNullOrWhiteSpace(recipe.Url))
+				if (recipe.PublishedURL != null)
 				{
 					var pub = HtmlNode.CreateNode($"<a>{recipe.Publisher}</a>");
-					pub.Attributes.Add("href", recipe.Url);
+					pub.Attributes.Add("href", recipe.PublishedURL.AbsoluteUri);
 					by.InnerHtml += pub.OuterHtml;
 				}
 				else
@@ -90,20 +87,18 @@ namespace Recipes
 			}
 
 			// Add the total time
-			if (recipe.TotalTime != null)
-			{
-				var ts = XmlConvert.ToTimeSpan(recipe.TotalTime);
-				body.AppendChild(HtmlNode.CreateNode($"<p>Totale bereidingstijd: {ts.ToReadableString()}</p>"));
-			}
+			if (recipe.TotalTime.TotalMinutes > 0)
+				body.AppendChild(HtmlNode.CreateNode($"<p>Totale bereidingstijd: {recipe.TotalTime.ToReadableString()}</p>"));
 
 			// Add the yields
-			body.AppendChild(HtmlNode.CreateNode($"<p>Voor {recipe.RecipeYield.Value} {recipe.RecipeYield.UnitText}</p>"));
+			if (!string.IsNullOrWhiteSpace(recipe.Yield))
+				body.AppendChild(HtmlNode.CreateNode($"<p>Voor {recipe.Yield}</p>"));
 
 			// Add the ingredients
 			body.AppendChild(HtmlNode.CreateNode($"<h2>Ingrediënten</h2>"));
 
 			var ingredients = body.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
-			foreach (var ingredient in recipe.RecipeIngredient)
+			foreach (var ingredient in recipe.Ingredients)
 			{
 				ingredients.AppendChild(HtmlNode.CreateNode($"<li>{ingredient}</li>"));
 			}
@@ -112,16 +107,14 @@ namespace Recipes
 			body.AppendChild(HtmlNode.CreateNode($"<h2>Bereidingswijze</h2>"));
 
 			var instructions = body.AppendChild(HtmlNode.CreateNode("<ol></ol>"));
-			foreach (var instruction in recipe.RecipeInstructions)
+			foreach (var instruction in recipe.Instructions)
 			{
 				instructions.AppendChild(HtmlNode.CreateNode($"<li>{instruction}</li>"));
 			}
-			*/
 		}
 
-		private void Write(string dir, Recipe recipe = null, Document document = null)
+		private void Write(string dir, RecipeModel recipe = null, Document document = null)
 		{
-			/* TODO
 			if (recipe == null && document == null)
 				return;
 
@@ -149,7 +142,6 @@ namespace Recipes
 
 			// Save the document
 			doc.Save(Path.Combine(dir, recipe?.FilenameHtml ?? document.FilenameHtml));
-			*/
 		}
 
 		private void WriteStartPage(string filename)
@@ -207,7 +199,6 @@ namespace Recipes
 
 		public override void Generate()
 		{
-			/* TODO
 			// Generate the recipes pages
 			foreach (var recipe in Recipes)
 			{
@@ -237,7 +228,6 @@ namespace Recipes
 
 			// Copy the stylesheet
 			File.Copy(Path.Combine(appsettings.InputPath, appsettings.Website.Stylesheet), Path.Combine(appsettings.Website.Output, appsettings.Website.Stylesheet), true);
-			*/
 		}
 	}
 }
