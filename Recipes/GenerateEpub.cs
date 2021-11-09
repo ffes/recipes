@@ -12,7 +12,7 @@ namespace Recipes
 {
 	public class GenerateEpub: GenerateBase
 	{
-		public GenerateEpub(List<Recipe> recipes, List<Keyword> keywords, List<Document> documents): base(recipes, keywords, documents)
+		public GenerateEpub(List<RecipeModel> recipes, List<Keyword> keywords, List<Document> documents): base(recipes, keywords, documents)
 		{
 		}
 
@@ -51,7 +51,7 @@ namespace Recipes
 			return doc;
 		}
 
-		private void AddRecipeToHtml(XmlDocument doc, XmlNode html, Recipe recipe)
+		private void AddRecipeToHtml(XmlDocument doc, XmlNode html, RecipeModel recipe)
 		{
 			// First add the body element
 			var body = doc.CreateElement("body");
@@ -63,7 +63,7 @@ namespace Recipes
 			body.AppendChild(title);
 
 			// Add the description
-			if (!string.IsNullOrEmpty(recipe.Description))
+			if (!string.IsNullOrWhiteSpace(recipe.Description))
 			{
 				var descr = doc.CreateElement("p");
 				descr.InnerXml = recipe.Description;
@@ -72,20 +72,22 @@ namespace Recipes
 
 			// Add the author or publisher
 			var by = doc.CreateElement("p");
-			if (recipe.Author != null)
+			if (!string.IsNullOrWhiteSpace(recipe.Author))
 			{
-				by.InnerXml = $"Gemaakt door {recipe.Author.Name}";
+				by.InnerXml = $"Gemaakt door {recipe.Author}";
 			}
 			else if (!string.IsNullOrWhiteSpace(recipe.Publisher))
 			{
 				by.InnerXml= "Gepubliceerd door ";
 
 				// Add a link to original URL
-				if (!string.IsNullOrWhiteSpace(recipe.Url))
+				if (recipe.PublishedURL != null)
 				{
 					var pub = doc.CreateElement("a");
 					pub.InnerXml = recipe.Publisher;
-					pub.SetAttribute("href", recipe.Url);
+
+					var url = recipe.PublishedURL.AbsoluteUri;
+					pub.SetAttribute("href", url);
 					by.AppendChild(pub);
 				}
 				else
@@ -93,28 +95,46 @@ namespace Recipes
 			}
 
 			// Add the publication date
-			if (recipe.DatePublished != null && recipe.DatePublished.Year > 1900)
+			if (recipe.DatePublished.Year > 1900)
 			{
 				if (string.IsNullOrWhiteSpace(by.InnerXml))
-					by.InnerXml = "Gepubliceerd ";
+					by.InnerXml = "Gepubliceerd";
 
 				by.InnerXml += " in " + recipe.DatePublished.ToString("MMMM yyyy", CultureInfo.GetCultureInfo(recipe.InLanguage));
 			}
 			body.AppendChild(by);
 
-			// Add the total time
-			if (recipe.TotalTime != null)
+			// Add the preparation time
+			if (recipe.PrepTime.TotalMinutes > 0)
 			{
-				var ts = XmlConvert.ToTimeSpan(recipe.TotalTime);
 				var time = doc.CreateElement("p");
-				time.InnerText = $"Totale bereidingstijd: {ts.ToReadableString()}";
+				time.InnerText = $"Voorbereidingstijd: {recipe.PrepTime.ToReadableString()}";
 				body.AppendChild(time);
 			}
 
-			// Add the yields
-			var yields = doc.CreateElement("p");
-			yields.InnerText = $"Voor {recipe.RecipeYield.Value} {recipe.RecipeYield.UnitText}";
-			body.AppendChild(yields);
+			// Add the cook time
+			if (recipe.CookTime.TotalMinutes > 0)
+			{
+				var time = doc.CreateElement("p");
+				time.InnerText = $"Bereidingstijd: {recipe.CookTime.ToReadableString()}";
+				body.AppendChild(time);
+			}
+
+			// Add the total time
+			if (recipe.TotalTime.TotalMinutes > 0)
+			{
+				var time = doc.CreateElement("p");
+				time.InnerText = $"Totale bereidingstijd: {recipe.TotalTime.ToReadableString()}";
+				body.AppendChild(time);
+			}
+
+			// Add how much the recipe yields
+			if (!string.IsNullOrWhiteSpace(recipe.Yield))
+			{
+				var yields = doc.CreateElement("p");
+				yields.InnerText = $"Voor {recipe.Yield}";
+				body.AppendChild(yields);
+			}
 
 			// Add the ingredients
 			var ingr_title = doc.CreateElement("h2");
@@ -124,7 +144,7 @@ namespace Recipes
 			var ingredients = doc.CreateElement("ul");
 			body.AppendChild(ingredients);
 
-			foreach (var ingredient in recipe.RecipeIngredient)
+			foreach (var ingredient in recipe.Ingredients)
 			{
 				var li = doc.CreateElement("li");
 				li.InnerText = ingredient;
@@ -138,10 +158,10 @@ namespace Recipes
 
 			var instructions = doc.CreateElement("ol");
 			body.AppendChild(instructions);
-			foreach (var instruction in recipe.RecipeInstructions)
+			foreach (var instruction in recipe.Instructions)
 			{
 				var li = doc.CreateElement("li");
-				li.InnerXml = instruction;
+				li.InnerXml = instruction.ToString();
 				instructions.AppendChild(li);
 			}
 		}
@@ -162,7 +182,7 @@ namespace Recipes
 			html.AppendChild(imported);
 		}
 
-		private void Write(string dir, Recipe recipe = null, Document document = null)
+		private void Write(string dir, RecipeModel recipe = null, Document document = null)
 		{
 			if (recipe == null && document == null)
 				return;
@@ -306,13 +326,13 @@ namespace Recipes
 			int i = 0;
 			foreach (var document in Documents)
 			{
-				navMap.AppendChild(CreateTocNavPoint(doc, document.Id, ++i, document.Name, "OEBPS/" + document.FilenameHtml));
+				navMap.AppendChild(CreateTocNavPoint(doc, document.EpubID, ++i, document.Name, "OEBPS/" + document.FilenameHtml));
 			}
 
 			// Now add the recipes
 			foreach (var recipe in Recipes)
 			{
-				navMap.AppendChild(CreateTocNavPoint(doc, recipe.Id, ++i, recipe.Name, "OEBPS/" + recipe.FilenameHtml));
+				navMap.AppendChild(CreateTocNavPoint(doc, recipe.EpubID, ++i, recipe.Name, "OEBPS/" + recipe.FilenameHtml));
 			}
 
 			doc.Save(Path.Combine(dir, "toc.ncx"));
@@ -391,7 +411,7 @@ namespace Recipes
 			foreach (var document in Documents)
 			{
 				var item = doc.CreateElement("item", opf_namespace);
-				item.SetAttribute("id", document.Id);
+				item.SetAttribute("id", document.EpubID);
 				item.SetAttribute("href", "OEBPS/" + document.FilenameHtml);
 				item.SetAttribute("media-type", "application/xhtml+xml");
 				manifest.AppendChild(item);
@@ -401,7 +421,7 @@ namespace Recipes
 			foreach (var recipe in Recipes)
 			{
 				var item = doc.CreateElement("item", opf_namespace);
-				item.SetAttribute("id", recipe.Id);
+				item.SetAttribute("id", recipe.EpubID);
 				item.SetAttribute("href", "OEBPS/" + recipe.FilenameHtml);
 				item.SetAttribute("media-type", "application/xhtml+xml");
 				manifest.AppendChild(item);
@@ -421,7 +441,7 @@ namespace Recipes
 			foreach (var document in Documents)
 			{
 				var item = doc.CreateElement("itemref", opf_namespace);
-				item.SetAttribute("idref", document.Id);
+				item.SetAttribute("idref", document.EpubID);
 				spine.AppendChild(item);
 			}
 
@@ -429,9 +449,18 @@ namespace Recipes
 			foreach (var recipe in Recipes)
 			{
 				var item = doc.CreateElement("itemref", opf_namespace);
-				item.SetAttribute("idref", recipe.Id);
+				item.SetAttribute("idref", recipe.EpubID);
 				spine.AppendChild(item);
 			}
+
+/*
+			<guide>
+				<reference type="cover" title="Cover Image" href="cover.xhtml" />
+				<reference type="toc" title="Table of Contents" href="toc.xhtml" />
+				<reference type="text" title="Startup Page" href="chapter1.xhtml" />
+				<reference type="index" title="Index" href="index.xhtml" />
+			</guide>
+*/
 
 			doc.Save(Path.Combine(dir, "content.opf"));
 		}

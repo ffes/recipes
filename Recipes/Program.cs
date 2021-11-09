@@ -2,17 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using Markdig;
 using Markdig.Renderers;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Recipes.Models;
+using Schema.NET;
 
 namespace Recipes
 {
-	internal class Program
+	public class Program
 	{
 		public static readonly IConfigurationRoot config = null;
 
@@ -31,18 +32,139 @@ namespace Recipes
 				.Build();
 		}
 
-		private static List<Recipe> GetRecipes()
+		public static RecipeModel FromRecipe(Recipe recipe)
+		{
+			var newModel = new RecipeModel
+			{
+				Name = recipe.Name,
+				Description = recipe.Description,
+				InLanguage = recipe.InLanguage
+			};
+
+			// Is there an author
+			if (recipe.Author.HasValue)
+			{
+				var (org, person) = recipe.Author;
+				newModel.Author = person.Count() > 0 ? person.First().Name : org.First().Name;
+			}
+
+			// Is there a publisher
+			if (recipe.Publisher.HasValue)
+			{
+				var (org, person) = recipe.Publisher;
+				newModel.Publisher = (org.Count() > 0 ? org.First().Name : person.First().Name);
+			}
+
+			// Add URL where this recipe was originally published
+			if (recipe.Url.Count > 0)
+			{
+				newModel.PublishedURL = recipe.Url.First();
+			}
+
+			// Add the date
+			if (recipe.DatePublished.HasValue)
+			{
+				var (_, date, _) = recipe.DatePublished;
+
+				if (date.Count() > 0)
+					newModel.DatePublished = date.First() ?? new DateTime();
+			}
+
+			// Add the category
+			if (recipe.RecipeCategory.Count > 0)
+			{
+				newModel.Category = recipe.RecipeCategory.First();
+			}
+
+			// Add the cuisine
+			if (recipe.RecipeCuisine.Count > 0)
+			{
+				newModel.Cuisine = recipe.RecipeCuisine.First();
+			}
+
+			// Add the preparation time
+			if (recipe.PrepTime.Count > 0)
+			{
+				newModel.PrepTime = recipe.PrepTime.First() ?? new TimeSpan();
+			}
+
+			// Add the cook time
+			if (recipe.CookTime.Count > 0)
+			{
+				newModel.CookTime = recipe.CookTime.First() ?? new TimeSpan();
+			}
+
+			// Add the total time
+			if (recipe.TotalTime.Count > 0)
+			{
+				newModel.TotalTime = recipe.TotalTime.First() ?? new TimeSpan();
+			}
+			else
+			{
+				// No TotalTime in the recipe, so add prep time and cook time
+				newModel.TotalTime = newModel.PrepTime + newModel.CookTime;
+			}
+
+			// Add the Yield
+			if (recipe.RecipeYield.HasValue)
+			{
+				var (quantity, str) = recipe.RecipeYield;
+				if (quantity.Count() > 0)
+				{
+					foreach (var q in quantity)
+					{
+						var (_, d, _, _) = q.Value;
+						newModel.Yield += $"{d.First()} {q.UnitText.First()}";
+					}
+				}
+				else
+					newModel.Yield = string.Join(", ", str.ToArray());
+			}
+
+			// Add the ingredients
+			foreach (var ingredient in recipe.RecipeIngredient)
+			{
+				if (newModel.Ingredients == null)
+					newModel.Ingredients = new List<string>();
+
+				newModel.Ingredients.Add(ingredient);
+			}
+
+			// Add the instructions
+			foreach (var instruction in recipe.RecipeInstructions)
+			{
+				if (newModel.Instructions == null)
+					newModel.Instructions = new List<string>();
+
+				newModel.Instructions.Add(instruction.ToString());
+			}
+
+			// Add the keywords
+			if (recipe.Keywords.Count > 0)
+			{
+				var (str, _) = recipe.Keywords;
+
+				foreach (var keywrds in str)
+				{
+					foreach (var w in keywrds.Split(","))
+					{
+						if (newModel.Keywords == null)
+							newModel.Keywords = new List<string>();
+
+						newModel.Keywords.Add(w.Trim().ToLower());
+					}
+				}
+			}
+
+			return newModel;
+		}
+
+		private static List<RecipeModel> GetRecipes()
 		{
 			var appsettings = config.Get<AppSettings>();
 
-			// Set the JSON options
-			var options = new JsonSerializerOptions
-			{
-				PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-			};
-
 			// Find all the JSON files in the input directory
-			var recipes = new List<Recipe>();
+			var recipes = new List<RecipeModel>();
 			var files = Directory.EnumerateFiles(appsettings.InputPath, "*.json", SearchOption.AllDirectories);
 			foreach (var filepath in files)
 			{
@@ -52,27 +174,28 @@ namespace Recipes
 				Recipe recipe = null;
 				try
 				{
-					recipe = JsonSerializer.Deserialize<Recipe>(document, options);
+					recipe = SchemaSerializer.DeserializeObject<Recipe>(document);
 				}
-				catch (JsonException ex)
+				catch (JsonReaderException ex)
 				{
-					Console.WriteLine($"Error parsing {filepath}: {ex}");
+					Console.WriteLine($"Error parsing {filepath}: {ex.Message}");
 				}
 
 				if (recipe == null)
 					continue;
 
-				if (string.IsNullOrWhiteSpace(recipe.Name))
+				if (recipe.Name.Count == 0)
 					continue;
 
-				recipes.Add(recipe);
+				var r = FromRecipe(recipe);
+				recipes.Add(r);
 
 				// Get the filename from the path and create the html filename
-				recipe.SourceFile = new FileInfo(filepath);
-				int len = recipe.SourceFile.Extension.Length;
-				recipe.FilenameHtml = recipe.SourceFile.Name[0..^len] + ".html";
+				r.SourceFile = new FileInfo(filepath);
+				int len = r.SourceFile.Extension.Length;
+				r.FilenameHtml = r.SourceFile.Name[0..^len] + ".html";
 
-				recipe.Id = $"recipe{recipes.Count}";
+				r.EpubID = $"recipe{recipes.Count}";
 			}
 
 			// Sort the recipes using Recipe.CompareTo()
@@ -81,7 +204,7 @@ namespace Recipes
 			return recipes;
 		}
 
-		private static List<Keyword> GetKeywordsFromRecipes(List<Recipe> recipes)
+		private static List<Keyword> GetKeywordsFromRecipes(List<RecipeModel> recipes)
 		{
 			var keywords = new HashSet<Keyword>();
 
@@ -90,19 +213,19 @@ namespace Recipes
 				var words = new HashSet<string>();
 
 				// Add the category
-				if (!string.IsNullOrWhiteSpace(recipe.RecipeCategory))
-					words.Add(recipe.RecipeCategory.Trim().ToLower());
+				if (!string.IsNullOrWhiteSpace(recipe.Category))
+					words.Add(recipe.Category.ToLower());
 
 				// Add the cuisine
-				if (!string.IsNullOrWhiteSpace(recipe.RecipeCuisine))
-					words.Add(recipe.RecipeCuisine.Trim().ToLower());
+				if (!string.IsNullOrWhiteSpace(recipe.Cuisine))
+					words.Add(recipe.Cuisine.ToLower());
 
 				// Go through the keywords
-				if (!string.IsNullOrWhiteSpace(recipe.Keywords))
+				if (recipe.Keywords != null)
 				{
-					foreach (var keyword in recipe.Keywords.Split(","))
+					foreach (var keyword in recipe.Keywords)
 					{
-						words.Add(keyword.Trim().ToLower());
+						words.Add(keyword);
 					}
 				}
 
@@ -120,7 +243,7 @@ namespace Recipes
 					{
 						// Add the recipe to hashset of recipes in this keyword
 						if (keyword.Recipes == null)
-							keyword.Recipes = new List<Recipe>();
+							keyword.Recipes = new List<RecipeModel>();
 
 						if (!keyword.Recipes.Contains(recipe))
 							keyword.Recipes.Add(recipe);
@@ -203,7 +326,7 @@ namespace Recipes
 				documents.Add(doc);
 
 				// And add the ID
-				doc.Id = $"doc{documents.Count}";
+				doc.EpubID = $"doc{documents.Count}";
 			}
 
 			return documents;
@@ -217,6 +340,9 @@ namespace Recipes
 			// Did we find any recipes?
 			if (recipes.Count == 0)
 				return;
+
+			// Get all the keywords from the recipes
+			var keywords = GetKeywordsFromRecipes(recipes);
 
 			// Get all the markdown documents
 			var docs = GetDocuments();
