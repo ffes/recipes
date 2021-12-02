@@ -51,6 +51,20 @@ namespace Recipes
 			return doc;
 		}
 
+		private void AddTimeSpan(XmlDocument doc, XmlElement element, TimeSpan time, string title)
+		{
+			// Is the time set
+			if (time.TotalMinutes == 0)
+				return;
+
+			// Do we need to add a break?
+			if (!element.IsEmpty)
+				element.AppendChild(doc.CreateElement("br"));
+
+			// Add the time
+			element.AppendChild(doc.CreateTextNode($"{title}: {time.ToReadableString()}"));
+		}
+
 		private void AddRecipeToHtml(XmlDocument doc, XmlNode html, RecipeModel recipe)
 		{
 			// First add the body element
@@ -104,29 +118,13 @@ namespace Recipes
 			}
 			body.AppendChild(by);
 
-			// Add the preparation time
-			if (recipe.PrepTime.TotalMinutes > 0)
-			{
-				var time = doc.CreateElement("p");
-				time.InnerText = $"Voorbereidingstijd: {recipe.PrepTime.ToReadableString()}";
+			// Add the time(s)
+			var time = doc.CreateElement("p");
+			AddTimeSpan(doc, time, recipe.PrepTime, "Voorbereidingstijd");
+			AddTimeSpan(doc, time, recipe.CookTime, "Bereidingstijd");
+			AddTimeSpan(doc, time, recipe.TotalTime, "Totale bereidingstijd");
+			if (!time.IsEmpty)
 				body.AppendChild(time);
-			}
-
-			// Add the cook time
-			if (recipe.CookTime.TotalMinutes > 0)
-			{
-				var time = doc.CreateElement("p");
-				time.InnerText = $"Bereidingstijd: {recipe.CookTime.ToReadableString()}";
-				body.AppendChild(time);
-			}
-
-			// Add the total time
-			if (recipe.TotalTime.TotalMinutes > 0)
-			{
-				var time = doc.CreateElement("p");
-				time.InnerText = $"Totale bereidingstijd: {recipe.TotalTime.ToReadableString()}";
-				body.AppendChild(time);
-			}
 
 			// Add how much the recipe yields
 			if (!string.IsNullOrWhiteSpace(recipe.Yield))

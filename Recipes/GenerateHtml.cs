@@ -39,6 +39,20 @@ namespace Recipes
 			head.AppendChild(HtmlNode.CreateNode($"<title>{title}</title>"));
 		}
 
+		private void AddTimeSpan(HtmlNode node, TimeSpan time, string title)
+		{
+			// Is the time set
+			if (time.TotalMinutes == 0)
+				return;
+
+			// Do we need to add a break?
+			if (node.HasChildNodes)
+				node.AppendChild(HtmlNode.CreateNode("<br>"));
+
+			// Add the time
+			node.AppendChild(HtmlNode.CreateNode($"{title}: {time.ToReadableString()}"));
+		}
+
 		private void AddRecipeToBody(HtmlNode body, RecipeModel recipe)
 		{
 			// Add the title at the start of the page
@@ -86,9 +100,13 @@ namespace Recipes
 				by.InnerHtml += " in " + recipe.DatePublished.ToString("MMMM yyyy", CultureInfo.GetCultureInfo(recipe.InLanguage));
 			}
 
-			// Add the total time
-			if (recipe.TotalTime.TotalMinutes > 0)
-				body.AppendChild(HtmlNode.CreateNode($"<p>Totale bereidingstijd: {recipe.TotalTime.ToReadableString()}</p>"));
+			// Add the time(s)
+			var time = HtmlNode.CreateNode("<p></p>");
+			AddTimeSpan(time, recipe.PrepTime, "Voorbereidingstijd");
+			AddTimeSpan(time, recipe.CookTime, "Bereidingstijd");
+			AddTimeSpan(time, recipe.TotalTime, "Totale bereidingstijd");
+			if (time.HasChildNodes)
+				body.AppendChild(time);
 
 			// Add the yields
 			if (!string.IsNullOrWhiteSpace(recipe.Yield))
