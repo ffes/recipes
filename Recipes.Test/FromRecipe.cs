@@ -83,15 +83,6 @@ namespace Recipes.Test
 		}
 
 		[TestMethod]
-		public void TotalTimeAdded()
-		{
-			var recipe = ParseRecipeFromJSON(GetBasicRecipe());
-			var newModel = Program.FromRecipe(recipe);
-
-			Assert.AreEqual(new TimeSpan(1, 15, 0), newModel.TotalTime);
-		}
-
-		[TestMethod]
 		public void TotalTimeNotSet()
 		{
 			var recipe = ParseRecipeFromJSON(GetRecipeWithPublisher());

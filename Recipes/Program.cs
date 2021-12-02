@@ -99,11 +99,6 @@ namespace Recipes
 			{
 				newModel.TotalTime = recipe.TotalTime.First() ?? new TimeSpan();
 			}
-			else
-			{
-				// No TotalTime in the recipe, so add prep time and cook time
-				newModel.TotalTime = newModel.PrepTime + newModel.CookTime;
-			}
 
 			// Add the Yield
 			if (recipe.RecipeYield.HasValue)
