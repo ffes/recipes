@@ -333,6 +333,9 @@ namespace Recipes
 				navMap.AppendChild(CreateTocNavPoint(doc, recipe.EpubID, ++i, recipe.Name, "OEBPS/" + recipe.FilenameHtml));
 			}
 
+			// Finally add the index page
+			navMap.AppendChild(CreateTocNavPoint(doc, "index", ++i, "Index", "OEBPS/indexpage.html"));
+
 			doc.Save(Path.Combine(dir, "toc.ncx"));
 		}
 
@@ -345,6 +348,7 @@ namespace Recipes
 			const string opf_namespace = "http://www.idpf.org/2007/opf";
 			const string dc_namespace = "http://purl.org/dc/elements/1.1/";
 			const string coverpage = "coverpage";
+			const string indexpage = "indexpage";
 
 			// Add the html root element
 			var package = doc.CreateElement("package", opf_namespace);
@@ -425,6 +429,13 @@ namespace Recipes
 				manifest.AppendChild(item);
 			}
 
+			// Add the index page to the manifest
+			var indexpg = doc.CreateElement("item", opf_namespace);
+			indexpg.SetAttribute("id", indexpage);
+			indexpg.SetAttribute("href", "OEBPS/indexpage.html");
+			indexpg.SetAttribute("media-type", "application/xhtml+xml");
+			manifest.AppendChild(indexpg);
+
 			// Add the spine
 			var spine = doc.CreateElement("spine", opf_namespace);
 			spine.SetAttribute("toc", "ncx");
@@ -451,6 +462,11 @@ namespace Recipes
 				spine.AppendChild(item);
 			}
 
+			// Add the index page to the spine
+			var idx = doc.CreateElement("itemref", opf_namespace);
+			idx.SetAttribute("idref", indexpage);
+			spine.AppendChild(idx);
+
 /*
 			<guide>
 				<reference type="cover" title="Cover Image" href="cover.xhtml" />
@@ -461,6 +477,53 @@ namespace Recipes
 */
 
 			doc.Save(Path.Combine(dir, "content.opf"));
+		}
+
+		private void WriteIndexPage(string dir)
+		{
+			// It all starts with a document
+			var doc = CreateXmlDocument(appsettings.EPUB.Language, "Index page");
+			var html = doc.SelectSingleNode("/html");
+
+			// Add the body and fill it
+			var body = doc.CreateElement("body");
+			html.AppendChild(body);
+
+			// Add the title at the top
+			var title = doc.CreateElement("h1");
+			title.InnerXml = "Index";
+			body.AppendChild(title);
+
+			foreach (var keyword in Keywords)
+			{
+				// First the keyword itself
+				var p = doc.CreateElement("p");
+				p.InnerXml = keyword.Name;
+				body.AppendChild(p);
+
+				// Then add a unorderd list with the recipes containing this keyword
+				var list = doc.CreateElement("ul");
+				body.AppendChild(list);
+
+				// Go through the recipes
+				foreach (var recipe in keyword.Recipes)
+				{
+					// Create a list item
+					var li = doc.CreateElement("li");
+					list.AppendChild(li);
+
+					// Create an anchor and fill it with the name of the recipe and its filename
+					// Note that the filename is relative to all the other pages, so they is no
+					// need for the "OEBPS/" prefix
+					var pub = doc.CreateElement("a");
+					pub.InnerXml = recipe.Name;
+					pub.SetAttribute("href", recipe.FilenameHtml);
+					li.AppendChild(pub);
+				}
+			}
+
+			// Save the document
+			doc.Save(Path.Combine(dir, "indexpage.html"));
 		}
 
 		private void CreateEpub(string dir, string filename)
@@ -504,6 +567,7 @@ namespace Recipes
 			Directory.CreateDirectory(contentDir);
 
 			WriteCoverPage(contentDir);
+			WriteIndexPage(contentDir);
 
 			foreach (var document in Documents)
 				Write(contentDir, document: document);
