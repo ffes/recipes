@@ -45,14 +45,14 @@ namespace Recipes
 			if (recipe.Author.HasValue)
 			{
 				var (org, person) = recipe.Author;
-				newModel.Author = person.Count() > 0 ? person.First().Name : org.First().Name;
+				newModel.Author = person.Any() ? person.First().Name : org.First().Name;
 			}
 
 			// Is there a publisher
 			if (recipe.Publisher.HasValue)
 			{
 				var (org, person) = recipe.Publisher;
-				newModel.Publisher = (org.Count() > 0 ? org.First().Name : person.First().Name);
+				newModel.Publisher = (org.Any() ? org.First().Name : person.First().Name);
 			}
 
 			// Add URL where this recipe was originally published
@@ -66,7 +66,7 @@ namespace Recipes
 			{
 				var (_, date, _) = recipe.DatePublished;
 
-				if (date.Count() > 0)
+				if (date.Any())
 					newModel.DatePublished = date.First() ?? new DateTime();
 			}
 
@@ -104,7 +104,7 @@ namespace Recipes
 			if (recipe.RecipeYield.HasValue)
 			{
 				var (quantity, str) = recipe.RecipeYield;
-				if (quantity.Count() > 0)
+				if (quantity.Any())
 				{
 					foreach (var q in quantity)
 					{
@@ -160,7 +160,7 @@ namespace Recipes
 
 			// Find all the JSON files in the input directory
 			var recipes = new List<RecipeModel>();
-			var files = Directory.EnumerateFiles(appsettings.InputPath, "*.json", SearchOption.AllDirectories);
+			var files = Directory.EnumerateFiles(appsettings.InputPaths.Recipes, "*.json", SearchOption.AllDirectories);
 			foreach (var filepath in files)
 			{
 				// Read the JSON and deserialize it
@@ -260,7 +260,7 @@ namespace Recipes
 
 			// Go through the InputPath and see if there are any Markdown documents there
 			var appsettings = config.Get<AppSettings>();
-			var files = Directory.EnumerateFiles(appsettings.InputPath, "*.md", SearchOption.AllDirectories);
+			var files = Directory.EnumerateFiles(appsettings.InputPaths.Documents, "*.md", SearchOption.AllDirectories);
 			foreach (var filepath in files)
 			{
 				var doc = new Document

@@ -19,9 +19,16 @@ namespace Recipes.Models
 		public Guid BookId { get; set; }
 	}
 
+	public class InputPaths
+	{
+		public string Recipes { get; set; }
+		public string Documents { get; set; }
+		public string WebFiles { get; set; }
+	}
+
 	public class AppSettings
 	{
-		public string InputPath { get; set; }
+		public InputPaths InputPaths { get; set; }
 		public Website Website { get; set; }
 		public EPUB EPUB { get; set; }
 	}

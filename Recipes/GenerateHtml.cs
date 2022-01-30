@@ -297,7 +297,7 @@ namespace Recipes
 			WriteStartPage(Path.Combine(appsettings.Website.Output, "index.html"));
 
 			// Copy the stylesheet
-			File.Copy(Path.Combine(appsettings.InputPath, appsettings.Website.Stylesheet), Path.Combine(appsettings.Website.Output, appsettings.Website.Stylesheet), true);
+			File.Copy(Path.Combine(appsettings.InputPaths.WebFiles, appsettings.Website.Stylesheet), Path.Combine(appsettings.Website.Output, appsettings.Website.Stylesheet), true);
 		}
 	}
 }
