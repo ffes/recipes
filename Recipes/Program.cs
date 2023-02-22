@@ -82,6 +82,12 @@ namespace Recipes
 				newModel.Cuisine = recipe.RecipeCuisine.First();
 			}
 
+			// Add the cooking method
+			if (recipe.CookingMethod.Count > 0)
+			{
+				newModel.CookingMethod = recipe.CookingMethod.First();
+			}
+
 			// Add the preparation time
 			if (recipe.PrepTime.Count > 0)
 			{
@@ -214,6 +220,10 @@ namespace Recipes
 				// Add the cuisine
 				if (!string.IsNullOrWhiteSpace(recipe.Cuisine))
 					words.Add(recipe.Cuisine.ToLower());
+
+				// Add the cooking method
+				if (!string.IsNullOrWhiteSpace(recipe.CookingMethod))
+					words.Add(recipe.CookingMethod.ToLower());
 
 				// Go through the keywords
 				if (recipe.Keywords != null)
