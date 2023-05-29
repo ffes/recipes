@@ -143,16 +143,27 @@ namespace Recipes
 			// Add the keywords
 			if (recipe.Keywords.Count > 0)
 			{
-				var (str, _) = recipe.Keywords;
+				var (str, uris) = recipe.Keywords;
 
 				foreach (var keywrds in str)
 				{
 					foreach (var w in keywrds.Split(","))
 					{
-						if (newModel.Keywords == null)
-							newModel.Keywords = new List<string>();
-
+						newModel.Keywords ??= new List<string>();
 						newModel.Keywords.Add(w.Trim().ToLower());
+					}
+				}
+
+				foreach (var keywrds in uris)
+				{
+					string kws = keywrds.ToString();
+					if (!string.IsNullOrWhiteSpace(kws))
+					{
+						foreach (var w in kws.Split(","))
+						{
+							newModel.Keywords ??= new List<string>();
+							newModel.Keywords.Add(w.Trim().ToLower());
+						}
 					}
 				}
 			}
