@@ -92,7 +92,7 @@ namespace Recipes
 			}
 
 			// Add the publication date
-			if (recipe.DatePublished != null && recipe.DatePublished.Year > 1900)
+			if (recipe.DatePublished.Year > 1900)
 			{
 				if (string.IsNullOrWhiteSpace(by.InnerHtml))
 					by.InnerHtml = "Gepubliceerd ";
