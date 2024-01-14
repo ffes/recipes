@@ -2,11 +2,20 @@ using System;
 
 namespace Recipes.Models
 {
+	public class Templates
+	{
+		public string Start { get; set; }
+		public string Recipes { get; set; }
+		public string Documents { get; set; }
+		public string Keywords { get; set; }
+	}
+
 	public class Website
 	{
 		public bool Enabled { get; set; }
 		public string Output { get; set; }
 		public string Stylesheet { get; set; }
+		public Templates Templates { get; set; }
 	}
 
 	public class EPUB

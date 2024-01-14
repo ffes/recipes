@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using HandlebarsDotNet;
 using HtmlAgilityPack;
 using Recipes.Models;
 
@@ -162,6 +163,43 @@ namespace Recipes
 			doc.Save(Path.Combine(dir, recipe?.FilenameHtml ?? document.FilenameHtml));
 		}
 
+		private static bool WriteRecipe(string templateFile, RecipeModel recipe, string outputFile)
+		{
+			string templateSource;
+			try
+			{
+				// Read the template from the file
+				templateSource = File.ReadAllText(templateFile);
+			}
+			catch (FileNotFoundException)
+			{
+				//logger.Error($"Bestand niet gevonden: {templateFile}");
+				return false;
+			}
+			catch (Exception e)
+			{
+				//logger.Error(e, "Exception bij uitlezen van: {templateFile}");
+				return false;
+			}
+
+			if (string.IsNullOrWhiteSpace(templateSource))
+			{
+				//logger.Error($"Kon bestand niet lezen: {templateFile}");
+				return false;
+			}
+			var template = Handlebars.Compile(templateSource);
+
+			// Combine the template and the data
+			var result = template(recipe);
+			//logger.Trace(result);
+
+			// TODO: Add Exception handling
+			//logger.Debug($"OutputFile: {outputFile}");
+			File.WriteAllText(outputFile, result);
+
+			return true;
+		}
+
 		private void WriteKeywordsPage(string filename)
 		{
 			// It all starts with a document
@@ -270,7 +308,9 @@ namespace Recipes
 			foreach (var recipe in Recipes)
 			{
 				// Generate the HTML output
-				Write(appsettings.Website.Output, recipe: recipe);
+				WriteRecipe(appsettings.Website.Templates.Recipes,
+					recipe,
+					Path.Combine(appsettings.Website.Output, recipe.FilenameHtml));
 
 				// Copy the image file to the output directory
 				if (!string.IsNullOrWhiteSpace(recipe.Image))
