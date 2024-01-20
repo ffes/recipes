@@ -10,12 +10,8 @@ using Recipes.Models;
 
 namespace Recipes
 {
-	public class GenerateEpub: GenerateBase
+	public class GenerateEpub(List<RecipeModel> recipes, List<Keyword> keywords, List<Document> documents) : GenerateBase(recipes, keywords, documents)
 	{
-		public GenerateEpub(List<RecipeModel> recipes, List<Keyword> keywords, List<Document> documents): base(recipes, keywords, documents)
-		{
-		}
-
 		public override bool Enabled => appsettings.EPUB.Enabled;
 
 		private XmlDocument CreateXmlDocument(string language, string title)

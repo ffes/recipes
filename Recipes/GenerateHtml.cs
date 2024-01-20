@@ -9,12 +9,8 @@ using Recipes.Models;
 
 namespace Recipes
 {
-	public class GenerateHtml: GenerateBase
+	public class GenerateHtml(List<RecipeModel> recipes, List<Keyword> keywords, List<Document> documents) : GenerateBase(recipes, keywords, documents)
 	{
-		public GenerateHtml(List<RecipeModel> recipes, List<Keyword> keywords, List<Document> documents): base(recipes, keywords, documents)
-		{
-		}
-
 		public override bool Enabled => appsettings.Website.Enabled;
 
 		protected static readonly Logger logger = Program.logger;
