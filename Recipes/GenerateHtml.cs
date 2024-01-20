@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using HandlebarsDotNet;
 using HtmlAgilityPack;
+using NLog;
 using Recipes.Models;
 
 namespace Recipes
@@ -15,6 +16,8 @@ namespace Recipes
 		}
 
 		public override bool Enabled => appsettings.Website.Enabled;
+
+		protected static readonly Logger logger = Program.logger;
 
 		/// <summary>
 		/// Add the basic elements to the head.
@@ -173,28 +176,27 @@ namespace Recipes
 			}
 			catch (FileNotFoundException)
 			{
-				//logger.Error($"Bestand niet gevonden: {templateFile}");
+				logger.Error($"File not found: {templateFile}");
 				return false;
 			}
 			catch (Exception e)
 			{
-				//logger.Error(e, "Exception bij uitlezen van: {templateFile}");
+				logger.Error(e, "Exception reading: {templateFile}");
 				return false;
 			}
 
 			if (string.IsNullOrWhiteSpace(templateSource))
 			{
-				//logger.Error($"Kon bestand niet lezen: {templateFile}");
+				logger.Error($"Unable to read: {templateFile}");
 				return false;
 			}
-			var template = Handlebars.Compile(templateSource);
 
 			// Combine the template and the data
+			var template = Handlebars.Compile(templateSource);
 			var result = template(recipe);
-			//logger.Trace(result);
 
 			// TODO: Add Exception handling
-			//logger.Debug($"OutputFile: {outputFile}");
+			logger.Debug($"OutputFile: {outputFile}");
 			File.WriteAllText(outputFile, result);
 
 			return true;

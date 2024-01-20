@@ -8,6 +8,7 @@ using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using NLog;
 using Recipes.Models;
 using Schema.NET;
 
@@ -22,6 +23,9 @@ namespace Recipes
 #else
 		private static readonly string environment = "Production";
 #endif
+
+		// NLog
+		public static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		static Program()
 		{
@@ -176,6 +180,7 @@ namespace Recipes
 			var appsettings = config.Get<AppSettings>();
 
 			// Find all the JSON files in the input directory
+			logger.Info($"Reading recipes from {appsettings.InputPaths.Recipes}");
 			var recipes = new List<RecipeModel>();
 			var files = Directory.EnumerateFiles(appsettings.InputPaths.Recipes, "*.json", SearchOption.AllDirectories);
 			foreach (var filepath in files)
@@ -190,7 +195,7 @@ namespace Recipes
 				}
 				catch (JsonReaderException ex)
 				{
-					Console.WriteLine($"Error parsing {filepath}: {ex.Message}");
+					logger.Error(ex, $"Error parsing {filepath}");
 				}
 
 				if (recipe == null)
@@ -348,7 +353,7 @@ namespace Recipes
 			return documents;
 		}
 
-		private static void Main(string[] args)
+		private static void MainWorker()
 		{
 			// First get all the recipes
 			var recipes = GetRecipes();
@@ -371,6 +376,22 @@ namespace Recipes
 			var epub = new GenerateEpub(recipes, keywords, docs);
 			if (epub.Enabled)
 				epub.Generate();
+		}
+
+		private static void Main(string[] args)
+		{
+			try
+			{
+				MainWorker();
+			}
+			catch (Exception e)
+			{
+				logger.Error(e, "Fatal uncatched exception in Main()");
+			}
+			finally
+			{
+				LogManager.Shutdown();
+			}
 		}
 	}
 }
