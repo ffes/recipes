@@ -309,11 +309,6 @@ namespace Recipes
 			// Generate the recipes pages
 			foreach (var recipe in Recipes)
 			{
-				// Generate the HTML output
-				WriteRecipe(appsettings.Website.Templates.Recipes,
-					recipe,
-					Path.Combine(appsettings.Website.Output, recipe.FilenameHtml));
-
 				// Copy the image file to the output directory
 				if (!string.IsNullOrWhiteSpace(recipe.Image))
 				{
@@ -323,7 +318,17 @@ namespace Recipes
 						var to = Path.Combine(appsettings.Website.Output, recipe.Image);
 						File.Copy(from, to, true);
 					}
+					else
+					{
+						logger.Warn($"Image '{recipe.Image}' for recipe '{recipe.Name}' not found!");
+						recipe.Image = null;
+					}
 				}
+
+				// Generate the HTML output
+				WriteRecipe(appsettings.Website.Templates.Recipes,
+					recipe,
+					Path.Combine(appsettings.Website.Output, recipe.FilenameHtml));
 			}
 
 			// Generate the markdown document pages

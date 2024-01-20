@@ -172,6 +172,13 @@ namespace Recipes
 				}
 			}
 
+			// Add the image
+			if (recipe.Image.HasValue)
+			{
+				var (_, uris) = recipe.Image;
+				newModel.Image = (uris.Any() ? uris.First().ToString() : null);
+			}
+
 			return newModel;
 		}
 
