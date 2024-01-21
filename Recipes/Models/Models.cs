@@ -31,6 +31,11 @@ namespace Recipes.Models
 		public string FilenameHtml { get; set; }
 		public string EpubID { get; set; }
 
+		// HandleBars has very limited support for formatting, so "solve" it here
+		public string PrepTimeText { get { return PrepTime.ToReadableString(); } }
+		public string CookTimeText { get { return CookTime.ToReadableString(); } }
+		public string TotalTimeText { get { return TotalTime.ToReadableString(); } }
+
 		public int CompareTo([AllowNull] RecipeModel other)
 		{
 			string name = Name;
