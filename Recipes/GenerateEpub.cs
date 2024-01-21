@@ -575,7 +575,7 @@ namespace Recipes
 			CreateEpub(baseDir, appsettings.EPUB.Filename);
 
 #if !DEBUG
-			Directory.Delete(tempDir, true);
+			Directory.Delete(baseDir, true);
 #endif
 		}
 	}
