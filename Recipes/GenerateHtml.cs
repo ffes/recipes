@@ -259,7 +259,7 @@ namespace Recipes
 			var body = html.AppendChild(HtmlNode.CreateNode("<body></body>"));
 
 			// Add the title at the top
-			body.AppendChild(HtmlNode.CreateNode($"<h1>{appsettings.EPUB.Name}</h1>"));
+			body.AppendChild(HtmlNode.CreateNode($"<h1>{appsettings.General.Name}</h1>"));
 
 			// First fill it a list of all the documents
 			if (Documents.Count > 0)
@@ -294,7 +294,9 @@ namespace Recipes
 			}
 
 			// Add the publication date
-			body.AppendChild(HtmlNode.CreateNode($"<p>{DateTime.Now:d MMMM yyyy}</p>"));
+			var culture = new CultureInfo(appsettings.General.Language);
+			var now = DateTime.Now.ToString("d MMMM yyyy", culture);
+			body.AppendChild(HtmlNode.CreateNode($"<p>{now}</p>"));
 
 			// Save the document
 			doc.Save(filename);

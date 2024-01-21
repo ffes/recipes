@@ -2,6 +2,13 @@ using System;
 
 namespace Recipes.Models
 {
+	public class General
+	{
+		public string Name { get; set; }
+		public string Author { get; set; }
+		public string Language { get; set; }
+	}
+
 	public class Templates
 	{
 		public string Start { get; set; }
@@ -22,9 +29,6 @@ namespace Recipes.Models
 	{
 		public bool Enabled { get; set; }
 		public string Filename { get; set; }
-		public string Name { get; set; }
-		public string Author { get; set; }
-		public string Language { get; set; }
 		public Guid BookId { get; set; }
 	}
 
@@ -37,6 +41,7 @@ namespace Recipes.Models
 
 	public class AppSettings
 	{
+		public General General { get; set; }
 		public InputPaths InputPaths { get; set; }
 		public Website Website { get; set; }
 		public EPUB EPUB { get; set; }

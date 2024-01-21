@@ -182,7 +182,7 @@ namespace Recipes
 				return;
 
 			// It all starts with a document
-			var doc = CreateXmlDocument(appsettings.EPUB.Language, recipe?.Name ?? document.Name);
+			var doc = CreateXmlDocument(appsettings.General.Language, recipe?.Name ?? document.Name);
 			var html = doc.SelectSingleNode("/html");
 
 			// Add the recipe or the document
@@ -198,7 +198,7 @@ namespace Recipes
 		private void WriteCoverPage(string dir)
 		{
 			// It all starts with a document
-			var doc = CreateXmlDocument(appsettings.EPUB.Language, "Cover page");
+			var doc = CreateXmlDocument(appsettings.General.Language, "Cover page");
 			var html = doc.SelectSingleNode("/html");
 
 			// Add the body and fill it
@@ -207,12 +207,12 @@ namespace Recipes
 
 			// Add the name of the ebook
 			var title = doc.CreateElement("h1");
-			title.InnerXml = appsettings.EPUB.Name;
+			title.InnerXml = appsettings.General.Name;
 			body.AppendChild(title);
 
 			// Add the author
 			var author = doc.CreateElement("h2");
-			author.InnerXml = appsettings.EPUB.Author;
+			author.InnerXml = appsettings.General.Author;
 			body.AppendChild(author);
 
 			// Add an empty line
@@ -309,7 +309,7 @@ namespace Recipes
 			ncx.AppendChild(docTitle);
 
 			var title = doc.CreateElement("text");
-			title.InnerXml = appsettings.EPUB.Name;
+			title.InnerXml = appsettings.General.Name;
 			docTitle.AppendChild(title);
 
 			// The actual TOC starts with a navMap
@@ -364,16 +364,16 @@ namespace Recipes
 
 			// Add the values to the metadata
 			var dc_title = doc.CreateElement("dc", "title", dc_namespace);
-			dc_title.InnerXml = appsettings.EPUB.Name;
+			dc_title.InnerXml = appsettings.General.Name;
 			metadata.AppendChild(dc_title);
 
 			var dc_creator = doc.CreateElement("dc", "creator", dc_namespace);
 			dc_creator.SetAttribute("role", opf_namespace, "aut");
-			dc_creator.InnerXml = appsettings.EPUB.Author;
+			dc_creator.InnerXml = appsettings.General.Author;
 			metadata.AppendChild(dc_creator);
 
 			var dc_language = doc.CreateElement("dc", "language", dc_namespace);
-			dc_language.InnerXml = appsettings.EPUB.Language;
+			dc_language.InnerXml = appsettings.General.Language;
 			metadata.AppendChild(dc_language);
 
 			var dc_id = doc.CreateElement("dc", "identifier", dc_namespace);
@@ -478,7 +478,7 @@ namespace Recipes
 		private void WriteIndexPage(string dir)
 		{
 			// It all starts with a document
-			var doc = CreateXmlDocument(appsettings.EPUB.Language, "Index page");
+			var doc = CreateXmlDocument(appsettings.General.Language, "Index page");
 			var html = doc.SelectSingleNode("/html");
 
 			// Add the body and fill it
