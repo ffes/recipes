@@ -253,7 +253,7 @@ namespace Recipes
 				{
 					foreach (var keyword in recipe.Keywords)
 					{
-						words.Add(keyword);
+						words.Add(keyword.ToLower());
 					}
 				}
 
@@ -270,9 +270,7 @@ namespace Recipes
 					if (keywords.TryGetValue(kw, out Keyword keyword))
 					{
 						// Add the recipe to hashset of recipes in this keyword
-						if (keyword.Recipes == null)
-							keyword.Recipes = new List<RecipeModel>();
-
+						keyword.Recipes ??= [];
 						if (!keyword.Recipes.Contains(recipe))
 							keyword.Recipes.Add(recipe);
 					}
