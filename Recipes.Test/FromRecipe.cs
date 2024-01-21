@@ -65,6 +65,15 @@ namespace Recipes.Test
 		}
 
 		[TestMethod]
+		public void PrepTimeText()
+		{
+			var recipe = ParseRecipeFromJSON(GetBasicRecipe());
+			var newModel = Program.FromRecipe(recipe);
+
+			Assert.AreEqual("15 minuten", newModel.PrepTimeText);
+		}
+
+		[TestMethod]
 		public void CookTime()
 		{
 			var recipe = ParseRecipeFromJSON(GetBasicRecipe());
@@ -74,12 +83,30 @@ namespace Recipes.Test
 		}
 
 		[TestMethod]
+		public void CookTimeText()
+		{
+			var recipe = ParseRecipeFromJSON(GetBasicRecipe());
+			var newModel = Program.FromRecipe(recipe);
+
+			Assert.AreEqual("1 uur", newModel.CookTimeText);
+		}
+
+		[TestMethod]
 		public void TotalTime()
 		{
 			var recipe = ParseRecipeFromJSON(GetRecipeWithKeywords());
 			var newModel = Program.FromRecipe(recipe);
 
 			Assert.AreEqual(new TimeSpan(0, 30, 0), newModel.TotalTime);
+		}
+
+		[TestMethod]
+		public void TotalTimeText()
+		{
+			var recipe = ParseRecipeFromJSON(GetRecipeWithKeywords());
+			var newModel = Program.FromRecipe(recipe);
+
+			Assert.AreEqual("30 minuten", newModel.TotalTimeText);
 		}
 
 		[TestMethod]
@@ -154,6 +181,15 @@ namespace Recipes.Test
 			var newModel = Program.FromRecipe(recipe);
 
 			Assert.AreEqual("Mexican", newModel.Cuisine);
+		}
+
+		[TestMethod]
+		public void CookingMethod()
+		{
+			var recipe = ParseRecipeFromJSON(GetRecipeWithKeywords());
+			var newModel = Program.FromRecipe(recipe);
+
+			Assert.AreEqual("Baking", newModel.CookingMethod);
 		}
 
 		[TestMethod]
@@ -251,6 +287,7 @@ namespace Recipes.Test
 				""unitText"": ""persons""
 			},
 			""recipeCategory"": ""Main Course"",
+			""cookingMethod"": ""Baking"",
 			""recipeCuisine"": ""Mexican""
 		}";
 
