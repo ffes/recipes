@@ -9,12 +9,15 @@ namespace Recipes.Models
 		public string Language { get; set; }
 	}
 
+	public class Partials
+	{
+		public string Recipes { get; set; }
+	}
+
 	public class Templates
 	{
-		public string Start { get; set; }
-		public string Recipes { get; set; }
-		public string Documents { get; set; }
-		public string Keywords { get; set; }
+		public string Base { get; set; }
+		public Partials Partials { get; set; }
 	}
 
 	public class Website

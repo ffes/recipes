@@ -9,6 +9,12 @@ using Recipes.Models;
 
 namespace Recipes
 {
+	internal class TemplateModel
+	{
+		public string Title { get; set; }
+		public object Content { get; set; }
+	}
+
 	public class GenerateHtml(List<RecipeModel> recipes, List<Keyword> keywords, List<Document> documents) : GenerateBase(recipes, keywords, documents)
 	{
 		public override bool Enabled => appsettings.Website.Enabled;
@@ -39,193 +45,123 @@ namespace Recipes
 			head.AppendChild(HtmlNode.CreateNode($"<title>{title}</title>"));
 		}
 
-		private void AddTimeSpan(HtmlNode node, TimeSpan time, string title)
+		private static bool ReadContentFromFile(string filename, out string content)
 		{
-			// Is the time set
-			if (time.TotalMinutes == 0)
-				return;
-
-			// Do we need to add a break?
-			if (node.HasChildNodes)
-				node.AppendChild(HtmlNode.CreateNode("<br>"));
-
-			// Add the time
-			node.AppendChild(HtmlNode.CreateNode($"{title}: {time.ToReadableString()}"));
-		}
-
-		private void AddRecipeToBody(HtmlNode body, RecipeModel recipe)
-		{
-			// Add the title at the start of the page
-			body.AppendChild(HtmlNode.CreateNode($"<h1>{recipe.Name}</h1>"));
-
-			// Add the description
-			if (!string.IsNullOrWhiteSpace(recipe.Description))
-				body.AppendChild(HtmlNode.CreateNode($"<p>{recipe.Description}</p>"));
-
-			if (!string.IsNullOrWhiteSpace(recipe.Image))
-			{
-				var img = body.AppendChild(HtmlNode.CreateNode("<img>"));
-				img.Attributes.Add("src", recipe.Image);
-				img.Attributes.Add("title", recipe.Name);
-				img.Attributes.Add("alt", recipe.Name);
-			}
-
-			// Add the author or publisher
-			var by = body.AppendChild(HtmlNode.CreateNode("<p></p>"));
-			if (!string.IsNullOrWhiteSpace(recipe.Author))
-			{
-				by.InnerHtml = $"Gemaakt door {recipe.Author}";
-			}
-			else if (!string.IsNullOrWhiteSpace(recipe.Publisher))
-			{
-				by.InnerHtml = "Gepubliceerd door ";
-
-				// Add a link to original URL
-				if (recipe.PublishedURL != null)
-				{
-					var pub = HtmlNode.CreateNode($"<a>{recipe.Publisher}</a>");
-					pub.Attributes.Add("href", recipe.PublishedURL.AbsoluteUri);
-					by.InnerHtml += pub.OuterHtml;
-				}
-				else
-					by.InnerHtml += recipe.Publisher;
-			}
-
-			// Add the publication date
-			if (recipe.DatePublished.Year > 1900)
-			{
-				if (string.IsNullOrWhiteSpace(by.InnerHtml))
-					by.InnerHtml = "Gepubliceerd ";
-
-				by.InnerHtml += " in " + recipe.DatePublished.ToString("MMMM yyyy", CultureInfo.GetCultureInfo(recipe.InLanguage));
-			}
-
-			// Add the time(s)
-			var time = HtmlNode.CreateNode("<p></p>");
-			AddTimeSpan(time, recipe.PrepTime, "Voorbereidingstijd");
-			AddTimeSpan(time, recipe.CookTime, "Bereidingstijd");
-			AddTimeSpan(time, recipe.TotalTime, "Totale bereidingstijd");
-			if (time.HasChildNodes)
-				body.AppendChild(time);
-
-			// Add the yields
-			if (!string.IsNullOrWhiteSpace(recipe.Yield))
-				body.AppendChild(HtmlNode.CreateNode($"<p>Voor {recipe.Yield}</p>"));
-
-			// Add the ingredients
-			body.AppendChild(HtmlNode.CreateNode($"<h2>Ingrediënten</h2>"));
-
-			var ingredients = body.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
-			foreach (var ingredient in recipe.Ingredients)
-			{
-				ingredients.AppendChild(HtmlNode.CreateNode($"<li>{ingredient}</li>"));
-			}
-
-			// Add the instructions
-			body.AppendChild(HtmlNode.CreateNode($"<h2>Bereidingswijze</h2>"));
-
-			var instructions = body.AppendChild(HtmlNode.CreateNode("<ol></ol>"));
-			foreach (var instruction in recipe.Instructions)
-			{
-				instructions.AppendChild(HtmlNode.CreateNode($"<li>{instruction}</li>"));
-			}
-		}
-
-		private void Write(string dir, RecipeModel recipe = null, Document document = null)
-		{
-			if (recipe == null && document == null)
-				return;
-
-			// It all starts with a document
-			var doc = new HtmlDocument();
-
-			// Add the html5 doctype
-			var doctype = doc.CreateComment("<!doctype html>");
-			doc.DocumentNode.AppendChild(doctype);
-
-			// Create html document
-			var html = HtmlNode.CreateNode("<html></html>");
-			doc.DocumentNode.AppendChild(html);
-
-			// Add the head and fill it
-			var head = html.AppendChild(HtmlNode.CreateNode("<head></head>"));
-			AddBasicsToHead(head, recipe?.Name ?? document.Name);
-
-			// Add the body and fill it
-			var body = html.AppendChild(HtmlNode.CreateNode("<body></body>"));
-			if (recipe != null)
-				AddRecipeToBody(body, recipe);
-			else
-				body.InnerHtml = document.Html;
-
-			// Save the document
-			doc.Save(Path.Combine(dir, recipe?.FilenameHtml ?? document.FilenameHtml));
-		}
-
-		private static bool WriteRecipe(string templateFile, RecipeModel recipe, string outputFile)
-		{
-			string templateSource;
+			content = "";
 			try
 			{
 				// Read the template from the file
-				templateSource = File.ReadAllText(templateFile);
+				content = File.ReadAllText(filename);
 			}
 			catch (FileNotFoundException)
 			{
-				logger.Error($"File not found: {templateFile}");
+				logger.Error($"File not found: {filename}");
 				return false;
 			}
 			catch (Exception e)
 			{
-				logger.Error(e, "Exception reading: {templateFile}");
+				logger.Error(e, $"Exception reading: {filename}");
 				return false;
 			}
 
-			if (string.IsNullOrWhiteSpace(templateSource))
+			if (string.IsNullOrWhiteSpace(content))
 			{
-				logger.Error($"Unable to read: {templateFile}");
+				logger.Error($"Unable to read: {filename}");
 				return false;
 			}
-
-			// Combine the template and the data
-			var template = Handlebars.Compile(templateSource);
-			var result = template(recipe);
-
-			// TODO: Add Exception handling
-			logger.Debug($"OutputFile: {outputFile}");
-			File.WriteAllText(outputFile, result);
 
 			return true;
 		}
 
-		private void WriteKeywordsPage(string filename)
+		private void WriteRecipes()
 		{
-			// It all starts with a document
+			if (!ReadContentFromFile(appsettings.Website.Templates.Base, out string baseTemplate))
+				return;
+
+			if (!ReadContentFromFile(appsettings.Website.Templates.Partials.Recipes, out string partialTemplate))
+				return;
+
+			// Link the partial to the content and combine it with the template
+			Handlebars.RegisterTemplate("content", partialTemplate);
+			var template = Handlebars.Compile(baseTemplate);
+
+			foreach (var recipe in Recipes)
+			{
+				// Copy the image file to the output directory
+				if (!string.IsNullOrWhiteSpace(recipe.Image))
+				{
+					var from = Path.Combine(recipe.SourceFile.DirectoryName, recipe.Image);
+					if (File.Exists(from))
+					{
+						var to = Path.Combine(appsettings.Website.Output, recipe.Image);
+						File.Copy(from, to, true);
+					}
+					else
+					{
+						logger.Warn($"Image '{recipe.Image}' for recipe '{recipe.Name}' not found!");
+						recipe.Image = null;
+					}
+				}
+
+				var data = new TemplateModel
+				{
+					Title = recipe.Name,
+					Content = recipe
+				};
+				var result = template(data);
+
+				// TODO: Add Exception handling
+				string outputFile = Path.Combine(appsettings.Website.Output, recipe.FilenameHtml);
+				logger.Debug($"OutputFile: {outputFile}");
+				File.WriteAllText(outputFile, result);
+			}
+		}
+
+		private void WriteDocuments()
+		{
+			if (!ReadContentFromFile(appsettings.Website.Templates.Base, out string baseTemplate))
+				return;
+
+			foreach (var document in Documents)
+			{
+				var data = new TemplateModel
+				{
+					Title = document.Name,
+					Content = document.Html
+				};
+
+				// Combine the template and the data
+				Handlebars.RegisterTemplate("content", document.Html);
+				var template = Handlebars.Compile(baseTemplate);
+				var result = template(data);
+
+				// TODO: Add Exception handling
+				var outputFile = Path.Combine(appsettings.Website.Output, document.FilenameHtml);
+				logger.Debug($"OutputFile: {outputFile}");
+				File.WriteAllText(outputFile, result);
+			}
+		}
+
+		private void WriteKeywords(string title, string filename)
+		{
+			// First read the template
+			if (!ReadContentFromFile(appsettings.Website.Templates.Base, out string baseTemplate))
+				return;
+
+			// Now starts a HTML document to hold the content
 			var doc = new HtmlDocument();
 
-			// Add the html5 doctype
-			var doctype = doc.CreateComment("<!doctype html>");
-			doc.DocumentNode.AppendChild(doctype);
+			// Start with the title
+			doc.DocumentNode.AppendChild(HtmlNode.CreateNode($"<h1>{title}</h1>"));
 
-			// Create html document
-			var html = HtmlNode.CreateNode("<html></html>");
-			doc.DocumentNode.AppendChild(html);
-
-			// Add the head and fill it
-			var head = html.AppendChild(HtmlNode.CreateNode("<head></head>"));
-			AddBasicsToHead(head, "Index");
-
-			// Add the body
-			var body = html.AppendChild(HtmlNode.CreateNode("<body></body>"));
-
-			// Add the title at the top
-			body.AppendChild(HtmlNode.CreateNode($"<h1>Index</h1>"));
-
+			// Now add for all keywords and the recipes that have to this keyword
 			foreach (var keyword in Keywords)
 			{
-				var p = body.AppendChild(HtmlNode.CreateNode($"<p>{keyword.Name}</p>"));
+				// First add the keyword
+				doc.DocumentNode.AppendChild(HtmlNode.CreateNode($"<h2>{keyword.Name}</h2>"));
 
-				var list = body.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
+				// Now add links to the recipes
+				var list = doc.DocumentNode.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
 				foreach (var recipe in keyword.Recipes)
 				{
 					var li = list.AppendChild(HtmlNode.CreateNode("<li></li>"));
@@ -234,8 +170,15 @@ namespace Recipes
 				}
 			}
 
-			// Save the document
-			doc.Save(filename);
+			// Combine the template and the data
+			Handlebars.RegisterTemplate("content", doc.DocumentNode.OuterHtml);
+			var template = Handlebars.Compile(baseTemplate);
+			var result = template(new { title });
+
+			// TODO: Add Exception handling
+			var outputFile = Path.Combine(appsettings.Website.Output, filename);
+			logger.Debug($"OutputFile: {outputFile}");
+			File.WriteAllText(outputFile, result);
 		}
 
 		private void WriteStartPage(string filename)
@@ -304,39 +247,9 @@ namespace Recipes
 
 		public override void Generate()
 		{
-			// Generate the recipes pages
-			foreach (var recipe in Recipes)
-			{
-				// Copy the image file to the output directory
-				if (!string.IsNullOrWhiteSpace(recipe.Image))
-				{
-					var from = Path.Combine(recipe.SourceFile.DirectoryName, recipe.Image);
-					if (File.Exists(from))
-					{
-						var to = Path.Combine(appsettings.Website.Output, recipe.Image);
-						File.Copy(from, to, true);
-					}
-					else
-					{
-						logger.Warn($"Image '{recipe.Image}' for recipe '{recipe.Name}' not found!");
-						recipe.Image = null;
-					}
-				}
-
-				// Generate the HTML output
-				WriteRecipe(appsettings.Website.Templates.Recipes,
-					recipe,
-					Path.Combine(appsettings.Website.Output, recipe.FilenameHtml));
-			}
-
-			// Generate the markdown document pages
-			foreach (var document in Documents)
-			{
-				Write(appsettings.Website.Output, document: document);
-			}
-
-			// Generate the index page based on the keywords
-			WriteKeywordsPage(Path.Combine(appsettings.Website.Output, "keywords.html"));
+			WriteRecipes();
+			WriteDocuments();
+			WriteKeywords("Index", "keywords.html");
 
 			// Generate the index.html
 			WriteStartPage(Path.Combine(appsettings.Website.Output, "index.html"));
