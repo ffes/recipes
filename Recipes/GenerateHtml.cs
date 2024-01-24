@@ -21,28 +21,33 @@ namespace Recipes
 
 		protected static readonly Logger logger = Program.logger;
 
-		/// <summary>
-		/// Add the basic elements to the head.
-		/// </summary>
-		/// <param name="head"></param>
-		private void AddBasicsToHead(HtmlNode head, string title)
+		public static void CopyAll(DirectoryInfo source, DirectoryInfo target)
 		{
-			// <meta charset="utf-8">
-			var meta = head.AppendChild(HtmlNode.CreateNode("<meta>"));
-			meta.Attributes.Add("charset", "utf-8");
+			try
+			{
+				// Check if the target directory exists
+				if (!Directory.Exists(target.FullName))
+				{
+					Directory.CreateDirectory(target.FullName);
+				}
 
-			// <meta name="viewport" content="width=device-width, initial-scale=1">
-			meta = head.AppendChild(HtmlNode.CreateNode("<meta>"));
-			meta.Attributes.Add("name", "viewport");
-			meta.Attributes.Add("content", "width=device-width, initial-scale=1");
+				// Copy all the files into the new directory
+				foreach (var file in source.GetFiles())
+				{
+					file.CopyTo(Path.Combine(target.ToString(), file.Name), true);
+				}
 
-			// <link href="styles.css" rel="stylesheet">
-			var link = head.AppendChild(HtmlNode.CreateNode("<link>"));
-			link.Attributes.Add("href", appsettings.Website.Stylesheet);
-			link.Attributes.Add("rel", "stylesheet");
-
-			// Add the title of the page
-			head.AppendChild(HtmlNode.CreateNode($"<title>{title}</title>"));
+				// Copy all the sub directories using recursion
+				foreach (var dir in source.GetDirectories())
+				{
+					var nextTargetDir = target.CreateSubdirectory(dir.Name);
+					CopyAll(dir, nextTargetDir);
+				}
+			}
+			catch (IOException e)
+			{
+				logger.Error(e, $"Exception copying {source.FullName} to {target.FullName}");
+			}
 		}
 
 		private static bool ReadContentFromFile(string filename, out string content)
@@ -186,29 +191,15 @@ namespace Recipes
 			// It all starts with a document
 			var doc = new HtmlDocument();
 
-			// Add the html5 doctype
-			var doctype = doc.CreateComment("<!doctype html>");
-			doc.DocumentNode.AppendChild(doctype);
-
-			// Create html document
-			var html = HtmlNode.CreateNode("<html></html>");
-			doc.DocumentNode.AppendChild(html);
-
-			// Add the head and fill it
-			var head = html.AppendChild(HtmlNode.CreateNode("<head></head>"));
-			AddBasicsToHead(head, "Recepten");
-
-			// Add the body
-			var body = html.AppendChild(HtmlNode.CreateNode("<body></body>"));
-
 			// Add the title at the top
-			body.AppendChild(HtmlNode.CreateNode($"<h1>{appsettings.General.Name}</h1>"));
+			doc.DocumentNode.AppendChild(HtmlNode.CreateNode($"<h1>{appsettings.General.Name}</h1>"));
+			doc.DocumentNode.AppendChild(HtmlNode.CreateNode($"<p>{appsettings.General.Author}</p>"));
 
 			// First fill it a list of all the documents
 			if (Documents.Count > 0)
 			{
-				body.AppendChild(HtmlNode.CreateNode("<h2>Algemeen</h2>"));
-				var general = body.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
+				doc.DocumentNode.AppendChild(HtmlNode.CreateNode("<h2>Algemeen</h2>"));
+				var general = doc.DocumentNode.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
 				foreach (var document in Documents)
 				{
 					var li = general.AppendChild(HtmlNode.CreateNode("<li></li>"));
@@ -218,8 +209,8 @@ namespace Recipes
 			}
 
 			// And then fill it a list of all the recipes
-			body.AppendChild(HtmlNode.CreateNode("<h2>Recepten</h2>"));
-			var list = body.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
+			doc.DocumentNode.AppendChild(HtmlNode.CreateNode("<h2>Recepten</h2>"));
+			var list = doc.DocumentNode.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
 			foreach (var recipe in Recipes)
 			{
 				var li = list.AppendChild(HtmlNode.CreateNode("<li></li>"));
@@ -233,16 +224,27 @@ namespace Recipes
 				var header = HtmlNode.CreateNode("<h2></h2>");
 				var a = header.AppendChild(HtmlNode.CreateNode($"<a>Index</a>"));
 				a.Attributes.Add("href", "keywords.html");
-				body.AppendChild(header);
+				doc.DocumentNode.AppendChild(header);
 			}
 
 			// Add the publication date
 			var culture = new CultureInfo(appsettings.General.Language);
 			var now = DateTime.Now.ToString("d MMMM yyyy", culture);
-			body.AppendChild(HtmlNode.CreateNode($"<p>{now}</p>"));
+			doc.DocumentNode.AppendChild(HtmlNode.CreateNode($"<small>{now}</small>"));
 
-			// Save the document
-			doc.Save(filename);
+			// First read the template
+			if (!ReadContentFromFile(appsettings.Website.Templates.Base, out string baseTemplate))
+				return;
+
+			// Combine the template and the data
+			Handlebars.RegisterTemplate("content", doc.DocumentNode.OuterHtml);
+			var template = Handlebars.Compile(baseTemplate);
+			var result = template(new { title = appsettings.General.Name });
+
+			// TODO: Add Exception handling
+			var outputFile = Path.Combine(appsettings.Website.Output, filename);
+			logger.Debug($"OutputFile: {outputFile}");
+			File.WriteAllText(outputFile, result);
 		}
 
 		public override void Generate()
@@ -250,12 +252,8 @@ namespace Recipes
 			WriteRecipes();
 			WriteDocuments();
 			WriteKeywords("Index", "keywords.html");
-
-			// Generate the index.html
-			WriteStartPage(Path.Combine(appsettings.Website.Output, "index.html"));
-
-			// Copy the stylesheet
-			File.Copy(Path.Combine(appsettings.InputPaths.WebFiles, appsettings.Website.Stylesheet), Path.Combine(appsettings.Website.Output, appsettings.Website.Stylesheet), true);
+			WriteStartPage("index.html");
+			CopyAll(new DirectoryInfo(appsettings.Website.WebFiles), new DirectoryInfo(appsettings.Website.Output));
 		}
 	}
 }

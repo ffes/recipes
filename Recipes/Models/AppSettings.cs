@@ -24,7 +24,7 @@ namespace Recipes.Models
 	{
 		public bool Enabled { get; set; }
 		public string Output { get; set; }
-		public string Stylesheet { get; set; }
+		public string WebFiles { get; set; }
 		public Templates Templates { get; set; }
 	}
 
@@ -39,7 +39,6 @@ namespace Recipes.Models
 	{
 		public string Recipes { get; set; }
 		public string Documents { get; set; }
-		public string WebFiles { get; set; }
 	}
 
 	public class AppSettings
