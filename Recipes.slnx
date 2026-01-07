@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Files/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="Recipes.Test/Recipes.Test.csproj" />
+  <Project Path="Recipes/Recipes.csproj" />
+</Solution>
