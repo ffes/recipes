@@ -105,12 +105,12 @@ namespace Recipes
 			}
 
 			// Add the publication date
-			if (recipe.DatePublished.Year > 1900)
+			if (recipe.PublishedDate.Year > 1900)
 			{
 				if (string.IsNullOrWhiteSpace(by.InnerXml))
 					by.InnerXml = "Gepubliceerd";
 
-				by.InnerXml += " in " + recipe.DatePublished.ToString("MMMM yyyy", CultureInfo.GetCultureInfo(recipe.InLanguage));
+				by.InnerXml += " in " + recipe.PublishedDate.ToString("MMMM yyyy", CultureInfo.GetCultureInfo(recipe.InLanguage));
 			}
 			body.AppendChild(by);
 

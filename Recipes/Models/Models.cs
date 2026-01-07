@@ -14,7 +14,7 @@ namespace Recipes.Models
 		public string Author { get; set; }
 		public string Publisher { get; set; }
 		public Uri PublishedURL { get; set; }
-		public DateTime DatePublished { get; set; }
+		public DateTime PublishedDate { get; set; }
 		public string Category { get; set; }
 		public string CookingMethod { get; set; }
 		public string Cuisine { get; set; }

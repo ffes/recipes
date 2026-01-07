@@ -71,7 +71,7 @@ namespace Recipes
 				var (_, date, _) = recipe.DatePublished;
 
 				if (date.Any())
-					newModel.DatePublished = date.First() ?? new DateTime();
+					newModel.PublishedDate = date.First() ?? new DateTime();
 			}
 
 			// Add the category

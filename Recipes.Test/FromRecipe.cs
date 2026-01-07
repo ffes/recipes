@@ -211,21 +211,21 @@ namespace Recipes.Test
 		}
 
 		[TestMethod]
-		public void DatePublished()
+		public void PublishedDate()
 		{
 			var recipe = ParseRecipeFromJSON(GetBasicRecipe());
 			var newModel = Program.FromRecipe(recipe);
 
-			Assert.AreEqual(new DateTime(2009, 5, 8), newModel.DatePublished);
+			Assert.AreEqual(new DateTime(2009, 5, 8), newModel.PublishedDate);
 		}
 
 		[TestMethod]
-		public void DatePublishedNotSet()
+		public void PublishedDateNotSet()
 		{
 			var recipe = ParseRecipeFromJSON(GetRecipeWithPublisher());
 			var newModel = Program.FromRecipe(recipe);
 
-			Assert.AreEqual(new DateTime(), newModel.DatePublished);
+			Assert.AreEqual(new DateTime(), newModel.PublishedDate);
 		}
 
 		// Parse the JSON to Schema.NET.Recipe
