@@ -1,7 +1,6 @@
-The MIT License (MIT)
-=====================
+# The MIT License (MIT)
 
-Copyright © 2020-2021, Frank Fesevur <https://www.fesevur.com/>
+Copyright © 2020-2026, Frank Fesevur <https://www.fesevur.com/>
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
