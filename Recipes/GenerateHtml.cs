@@ -117,6 +117,7 @@ namespace Recipes
 				var result = template(data);
 
 				// TODO: Add Exception handling
+				Directory.CreateDirectory(appsettings.Website.Output);
 				string outputFile = Path.Combine(appsettings.Website.Output, recipe.FilenameHtml);
 				logger.Debug($"OutputFile: {outputFile}");
 				File.WriteAllText(outputFile, result);
@@ -142,6 +143,7 @@ namespace Recipes
 				var result = template(data);
 
 				// TODO: Add Exception handling
+				Directory.CreateDirectory(appsettings.Website.Output);
 				var outputFile = Path.Combine(appsettings.Website.Output, document.FilenameHtml);
 				logger.Debug($"OutputFile: {outputFile}");
 				File.WriteAllText(outputFile, result);
@@ -196,7 +198,7 @@ namespace Recipes
 			doc.DocumentNode.AppendChild(HtmlNode.CreateNode($"<h1>{appsettings.General.Name}</h1>"));
 			doc.DocumentNode.AppendChild(HtmlNode.CreateNode($"<p>{appsettings.General.Author}</p>"));
 
-			// First fill it a list of all the documents
+			// First fill it with a list of all the documents
 			if (Documents.Count > 0)
 			{
 				doc.DocumentNode.AppendChild(HtmlNode.CreateNode("<h2>Algemeen</h2>"));
@@ -209,7 +211,7 @@ namespace Recipes
 				}
 			}
 
-			// And then fill it a list of all the recipes
+			// And then fill with it a list of all the recipes
 			doc.DocumentNode.AppendChild(HtmlNode.CreateNode("<h2>Recepten</h2>"));
 			var list = doc.DocumentNode.AppendChild(HtmlNode.CreateNode("<ul></ul>"));
 			foreach (var recipe in Recipes)
