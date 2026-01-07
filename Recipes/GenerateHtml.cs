@@ -18,6 +18,7 @@ namespace Recipes
 	public class GenerateHtml(List<RecipeModel> recipes, List<Keyword> keywords, List<Document> documents) : GenerateBase(recipes, keywords, documents)
 	{
 		public override bool Enabled => appsettings.Website.Enabled;
+		private readonly string keywordsFilename = "keywords.html";
 
 		protected static readonly Logger logger = Program.logger;
 
@@ -223,7 +224,7 @@ namespace Recipes
 			{
 				var header = HtmlNode.CreateNode("<h2></h2>");
 				var a = header.AppendChild(HtmlNode.CreateNode($"<a>Index</a>"));
-				a.Attributes.Add("href", "keywords.html");
+				a.Attributes.Add("href", keywordsFilename);
 				doc.DocumentNode.AppendChild(header);
 			}
 
@@ -251,7 +252,7 @@ namespace Recipes
 		{
 			WriteRecipes();
 			WriteDocuments();
-			WriteKeywords("Index", "keywords.html");
+			WriteKeywords("Index", keywordsFilename);
 			WriteStartPage("index.html");
 			CopyAll(new DirectoryInfo(appsettings.Website.WebFiles), new DirectoryInfo(appsettings.Website.Output));
 		}
